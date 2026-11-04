@@ -12,6 +12,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class StudentBooksFrame extends JFrame {
 
@@ -40,7 +42,10 @@ public class StudentBooksFrame extends JFrame {
                 new Color(245, 247, 250)
         );
 
+        // ==========================================
         // HEADER
+        // ==========================================
+
         JLabel titleLabel = new JLabel("Browse Library Books");
 
         titleLabel.setFont(
@@ -57,7 +62,10 @@ public class StudentBooksFrame extends JFrame {
 
         add(titleLabel, BorderLayout.NORTH);
 
-        // TABLE
+        // ==========================================
+        // BOOK TABLE
+        // ==========================================
+
         String[] columns = {
                 "Book ID",
                 "ISBN",
@@ -71,6 +79,7 @@ public class StudentBooksFrame extends JFrame {
         };
 
         tableModel = new DefaultTableModel(columns, 0) {
+
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -96,7 +105,10 @@ public class StudentBooksFrame extends JFrame {
 
         add(scrollPane, BorderLayout.CENTER);
 
+        // ==========================================
         // SEARCH AND ACTION PANEL
+        // ==========================================
+
         JPanel searchPanel = new JPanel(
                 new FlowLayout(FlowLayout.LEFT, 10, 10)
         );
@@ -125,7 +137,10 @@ public class StudentBooksFrame extends JFrame {
 
         add(searchPanel, BorderLayout.SOUTH);
 
+        // ==========================================
         // BUTTON ACTIONS
+        // ==========================================
+
         searchButton.addActionListener(e ->
                 loadBooks(searchField.getText().trim())
         );
@@ -149,6 +164,10 @@ public class StudentBooksFrame extends JFrame {
 
         loadBooks("");
     }
+
+    // ==========================================
+    // LOAD BOOKS
+    // ==========================================
 
     private void loadBooks(String search) {
 
@@ -216,17 +235,23 @@ public class StudentBooksFrame extends JFrame {
         }
     }
 
+    // ==========================================
+    // VIEW BOOK DETAILS
+    // ==========================================
+
     private void showBookDetails() {
 
         int selectedRow = bookTable.getSelectedRow();
 
         if (selectedRow == -1) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Please select a book first.",
                     "No Book Selected",
                     JOptionPane.WARNING_MESSAGE
             );
+
             return;
         }
 
@@ -267,17 +292,23 @@ public class StudentBooksFrame extends JFrame {
         );
     }
 
+    // ==========================================
+    // STUDENT: SUBMIT BORROWING REQUEST
+    // ==========================================
+
     private void submitBorrowRequest() {
 
         int selectedRow = bookTable.getSelectedRow();
 
         if (selectedRow == -1) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Please select a book first.",
                     "No Book Selected",
                     JOptionPane.WARNING_MESSAGE
             );
+
             return;
         }
 
@@ -294,37 +325,180 @@ public class StudentBooksFrame extends JFrame {
         );
 
         if (availableCopies <= 0) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "This book currently has no available copies.",
                     "Book Unavailable",
                     JOptionPane.WARNING_MESSAGE
             );
+
             return;
         }
+
+        // ==========================================
+        // BORROWING DURATION SELECTION
+        // ==========================================
+
+        Integer[] durationOptions = {
+                3, 5, 7, 14
+        };
+
+        JComboBox<Integer> durationCombo =
+                new JComboBox<>(durationOptions);
+
+        durationCombo.setSelectedItem(7);
+
+        JLabel dueDateLabel = new JLabel();
+
+        dueDateLabel.setFont(
+                new Font("Segoe UI", Font.BOLD, 12)
+        );
+
+        dueDateLabel.setForeground(
+                new Color(23, 43, 77)
+        );
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+
+        // Update estimated due date when duration changes.
+        Runnable updateDueDate = () -> {
+
+            int days = (Integer) durationCombo.getSelectedItem();
+
+            LocalDate estimatedDueDate =
+                    LocalDate.now().plusDays(days);
+
+            dueDateLabel.setText(
+                    "Estimated Return Date: "
+                            + estimatedDueDate.format(formatter)
+            );
+        };
+
+        durationCombo.addActionListener(e ->
+                updateDueDate.run()
+        );
+
+        updateDueDate.run();
+
+        // ==========================================
+        // BORROWING REQUEST FORM
+        // ==========================================
+
+        JPanel requestPanel = new JPanel();
+
+        requestPanel.setLayout(
+                new BoxLayout(requestPanel, BoxLayout.Y_AXIS)
+        );
+
+        requestPanel.setBorder(
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        );
+
+        JLabel bookLabel = new JLabel(
+                "Book: " + bookTitle
+        );
+
+        bookLabel.setFont(
+                new Font("Segoe UI", Font.BOLD, 14)
+        );
+
+        JLabel durationLabel = new JLabel(
+                "Select Borrowing Duration:"
+        );
+
+        durationLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 12)
+        );
+
+        JLabel informationLabel = new JLabel(
+                "Choose how many days you want to borrow this book."
+        );
+
+        informationLabel.setForeground(
+                Color.GRAY
+        );
+
+        informationLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 11)
+        );
+
+        JLabel approvalNote = new JLabel(
+                "The borrowing period starts upon Admin approval."
+        );
+
+        approvalNote.setForeground(
+                new Color(100, 100, 100)
+        );
+
+        approvalNote.setFont(
+                new Font("Segoe UI", Font.ITALIC, 11)
+        );
+
+        requestPanel.add(bookLabel);
+        requestPanel.add(Box.createVerticalStrut(15));
+
+        requestPanel.add(durationLabel);
+        requestPanel.add(Box.createVerticalStrut(5));
+
+        requestPanel.add(durationCombo);
+        requestPanel.add(Box.createVerticalStrut(12));
+
+        requestPanel.add(dueDateLabel);
+        requestPanel.add(Box.createVerticalStrut(12));
+
+        requestPanel.add(informationLabel);
+        requestPanel.add(Box.createVerticalStrut(5));
+
+        requestPanel.add(approvalNote);
+
+        // ==========================================
+        // CONFIRM BORROWING REQUEST
+        // ==========================================
 
         int confirmation = JOptionPane.showConfirmDialog(
                 this,
-                "Submit a borrowing request for:\n\n"
-                        + bookTitle
-                        + "\n\nA librarian must approve your request "
-                        + "before the book is borrowed.",
-                "Confirm Borrowing Request",
-                JOptionPane.YES_NO_OPTION
+                requestPanel,
+                "Borrowing Request",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
         );
 
-        if (confirmation != JOptionPane.YES_OPTION) {
+        if (confirmation != JOptionPane.OK_OPTION) {
             return;
         }
 
+        // Get selected borrowing duration.
+        int borrowingDays =
+                (Integer) durationCombo.getSelectedItem();
+
+        // ==========================================
+        // SUBMIT REQUEST TO DATABASE
+        // ==========================================
+
         try {
 
-            BorrowRequestService.submitRequest(session, bookId);
+            BorrowRequestService.submitRequest(
+                    session,
+                    bookId,
+                    borrowingDays
+            );
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Your borrowing request has been submitted!\n"
-                            + "You can check its status in My Borrowing Requests.",
+                    "Your borrowing request has been submitted successfully!\n\n"
+                            + "Book: " + bookTitle + "\n"
+                            + "Borrowing Duration: " + borrowingDays + " days\n\n"
+                            + "Your estimated return date is: "
+                            + LocalDate.now()
+                            .plusDays(borrowingDays)
+                            .format(formatter)
+                            + "\n\n"
+                            + "The actual borrowing period will begin "
+                            + "once the librarian approves your request.\n\n"
+                            + "You can check your request status in "
+                            + "My Borrowing Requests.",
                     "Request Submitted",
                     JOptionPane.INFORMATION_MESSAGE
             );

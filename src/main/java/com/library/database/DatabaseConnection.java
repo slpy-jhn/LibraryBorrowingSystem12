@@ -72,12 +72,15 @@ public class DatabaseConnection {
                 )
                 """;
 
+        // Borrowing transactions table
         String transactionsTable = """
                 CREATE TABLE IF NOT EXISTS transactions (
                     transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     member_id INTEGER NOT NULL,
                     book_id INTEGER NOT NULL,
                     borrowing_date TEXT NOT NULL,
+                    borrowing_duration INTEGER NOT NULL DEFAULT 7
+                        CHECK(borrowing_duration > 0),
                     due_date TEXT NOT NULL,
                     return_date TEXT,
                     status TEXT NOT NULL DEFAULT 'BORROWED'
@@ -95,6 +98,8 @@ public class DatabaseConnection {
                     request_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     member_id INTEGER NOT NULL,
                     book_id INTEGER NOT NULL,
+                    borrowing_duration INTEGER NOT NULL DEFAULT 7
+                        CHECK(borrowing_duration > 0),
                     request_date TEXT NOT NULL DEFAULT
                         (datetime('now', 'localtime')),
                     status TEXT NOT NULL DEFAULT 'PENDING'
@@ -155,7 +160,10 @@ public class DatabaseConnection {
             // Create return request table
             statement.executeUpdate(returnRequestsTable);
 
-            // Repair older return_requests table structures
+            // Migrate borrowing duration columns
+            migrateBorrowingDuration(connection);
+
+            // Repair older return request table structures
             migrateReturnRequestsTable(connection);
 
             // Create borrowing request index
@@ -172,6 +180,7 @@ public class DatabaseConnection {
             System.out.println("Database tables created successfully!");
             System.out.println("Borrow requests table verified successfully.");
             System.out.println("Return requests table verified successfully.");
+            System.out.println("Borrowing duration columns verified successfully.");
 
         } catch (SQLException e) {
 
@@ -205,6 +214,63 @@ public class DatabaseConnection {
         return false;
     }
 
+    // Add borrowing duration to existing database tables
+    private static void migrateBorrowingDuration(
+            Connection connection
+    ) throws SQLException {
+
+        try (Statement statement = connection.createStatement()) {
+
+            // Add borrowing_duration to old transactions tables
+            if (!columnExists(
+                    connection,
+                    "transactions",
+                    "borrowing_duration")) {
+
+                statement.executeUpdate("""
+                        ALTER TABLE transactions
+                        ADD COLUMN borrowing_duration INTEGER NOT NULL DEFAULT 7
+                        """);
+
+                System.out.println(
+                        "Added borrowing_duration to transactions.");
+            }
+
+            // Add borrowing_duration to old borrow_requests tables
+            if (!columnExists(
+                    connection,
+                    "borrow_requests",
+                    "borrowing_duration")) {
+
+                statement.executeUpdate("""
+                        ALTER TABLE borrow_requests
+                        ADD COLUMN borrowing_duration INTEGER NOT NULL DEFAULT 7
+                        """);
+
+                System.out.println(
+                        "Added borrowing_duration to borrow_requests.");
+            }
+
+            // Repair invalid or missing durations
+            statement.executeUpdate("""
+                    UPDATE transactions
+                    SET borrowing_duration = 7
+                    WHERE borrowing_duration IS NULL
+                       OR borrowing_duration <= 0
+                    """);
+
+            statement.executeUpdate("""
+                    UPDATE borrow_requests
+                    SET borrowing_duration = 7
+                    WHERE borrowing_duration IS NULL
+                       OR borrowing_duration <= 0
+                    """);
+
+            System.out.println(
+                    "Borrowing duration migration completed.");
+        }
+    }
+
     // Repair and update older return_requests tables
     private static void migrateReturnRequestsTable(
             Connection connection
@@ -220,7 +286,8 @@ public class DatabaseConnection {
                         ADD COLUMN status TEXT NOT NULL DEFAULT 'PENDING'
                         """);
 
-                System.out.println("Added missing return request status column.");
+                System.out.println(
+                        "Added missing return request status column.");
             }
 
             // Add request_date column if missing
@@ -231,7 +298,8 @@ public class DatabaseConnection {
                         ADD COLUMN request_date TEXT
                         """);
 
-                System.out.println("Added missing return request date column.");
+                System.out.println(
+                        "Added missing return request date column.");
             }
 
             // Add decision_date column if missing
@@ -242,18 +310,23 @@ public class DatabaseConnection {
                         ADD COLUMN decision_date TEXT
                         """);
 
-                System.out.println("Added missing return decision date column.");
+                System.out.println(
+                        "Added missing return decision date column.");
             }
 
             // Add rejection_reason column if missing
-            if (!columnExists(connection, "return_requests", "rejection_reason")) {
+            if (!columnExists(
+                    connection,
+                    "return_requests",
+                    "rejection_reason")) {
 
                 statement.executeUpdate("""
                         ALTER TABLE return_requests
                         ADD COLUMN rejection_reason TEXT
                         """);
 
-                System.out.println("Added missing rejection reason column.");
+                System.out.println(
+                        "Added missing rejection reason column.");
             }
 
             // Repair existing requests with an empty or missing status
@@ -272,7 +345,8 @@ public class DatabaseConnection {
                        OR TRIM(request_date) = ''
                     """);
 
-            System.out.println("Return requests table migration completed.");
+            System.out.println(
+                    "Return requests table migration completed.");
         }
     }
 }
