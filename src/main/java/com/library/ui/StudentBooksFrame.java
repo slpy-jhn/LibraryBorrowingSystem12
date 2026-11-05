@@ -1,4 +1,3 @@
-
 package com.library.ui;
 
 import com.library.database.DatabaseConnection;
@@ -8,9 +7,11 @@ import com.library.service.UserSession;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
@@ -30,21 +31,32 @@ public class StudentBooksFrame extends JFrame {
     private JTable bookTable;
     private DefaultTableModel tableModel;
     private JTextField searchField;
+    private JComboBox<String> categoryFilter;
 
     private JLabel resultsLabel;
     private JLabel availableLabel;
 
-    private final UserSession session;
+    private JLabel detailCoverLabel;
+    private JLabel detailTitleLabel;
+    private JLabel detailAuthorLabel;
+    private JLabel detailYearLabel;
+    private JLabel detailCategoryLabel;
+    private JLabel detailAvailabilityLabel;
+    private JLabel detailShelfLabel;
 
-    private static final Color BURGUNDY = new Color(105, 25, 43);
-    private static final Color DARK_BURGUNDY = new Color(78, 17, 32);
-    private static final Color GOLD = new Color(205, 166, 85);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 48, 48);
-    private static final Color MUTED = new Color(125, 116, 112);
-    private static final Color BORDER = new Color(230, 222, 211);
-    private static final Color LIGHT_GOLD = new Color(248, 241, 226);
+    private final UserSession session;
+    private boolean loadingCategories = false;
+
+    // COLORS
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("MMMM dd, yyyy");
@@ -60,8 +72,8 @@ public class StudentBooksFrame extends JFrame {
 
         setTitle("LibraryLink - Browse Books");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setMinimumSize(new Dimension(950, 600));
-        setSize(1250, 750);
+        setMinimumSize(new Dimension(1050, 650));
+        setSize(1300, 800);
         setLocationRelativeTo(null);
 
         getContentPane().setBackground(CREAM);
@@ -70,10 +82,14 @@ public class StudentBooksFrame extends JFrame {
         add(createHeader(), BorderLayout.NORTH);
         add(createMainContent(), BorderLayout.CENTER);
 
+        loadCategories();
         loadBooks("");
     }
 
+    // =========================
     // HEADER
+    // =========================
+
     private JPanel createHeader() {
 
         JPanel header = new JPanel(new BorderLayout());
@@ -85,21 +101,21 @@ public class StudentBooksFrame extends JFrame {
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel("Browse Library Books");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 27));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
-        JLabel subtitle = new JLabel(
-                "Discover books and submit your borrowing requests."
-        );
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        subtitle.setForeground(new Color(239, 222, 211));
+        JLabel subtitle = new JLabel("Discover and Borrow");
+        subtitle.setFont(new Font("Georgia", Font.ITALIC, 14));
+        subtitle.setForeground(WHITE);
 
         titlePanel.add(title);
-        titlePanel.add(Box.createVerticalStrut(5));
+        titlePanel.add(Box.createVerticalStrut(6));
         titlePanel.add(subtitle);
 
-        JButton closeButton = createButton("Close", DARK_BURGUNDY, WHITE);
-        closeButton.setPreferredSize(new Dimension(100, 38));
+        JButton closeButton = createButton(
+                "CLOSE", DARK_BURGUNDY, WHITE
+        );
+        closeButton.setPreferredSize(new Dimension(105, 40));
         closeButton.addActionListener(e -> dispose());
 
         header.add(titlePanel, BorderLayout.CENTER);
@@ -108,30 +124,55 @@ public class StudentBooksFrame extends JFrame {
         return header;
     }
 
+    // =========================
     // MAIN CONTENT
+    // =========================
+
     private JPanel createMainContent() {
 
-        JPanel main = new JPanel(new BorderLayout(0, 18));
+        JPanel main = new JPanel(new BorderLayout(0, 16));
         main.setBackground(CREAM);
-        main.setBorder(new EmptyBorder(22, 28, 25, 28));
+        main.setBorder(new EmptyBorder(20, 25, 20, 25));
 
         main.add(createSummaryPanel(), BorderLayout.NORTH);
-        main.add(createBookTablePanel(), BorderLayout.CENTER);
+
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setOpaque(false);
+
+        JSplitPane splitPane = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                createBookTablePanel(),
+                createBookDetailsPanel()
+        );
+
+        splitPane.setResizeWeight(0.73);
+        splitPane.setDividerLocation(0.73);
+        splitPane.setEnabled(false); // Lock pane divider
+        splitPane.setDividerSize(0);  // Remove divider line
+        splitPane.setBorder(null);
+        splitPane.setOpaque(false);
+
+        centerPanel.add(splitPane, BorderLayout.CENTER);
+
+        main.add(centerPanel, BorderLayout.CENTER);
         main.add(createActionPanel(), BorderLayout.SOUTH);
 
         return main;
     }
 
+    // =========================
     // SUMMARY CARDS
+    // =========================
+
     private JPanel createSummaryPanel() {
 
-        JPanel panel = new JPanel(new GridLayout(1, 2, 15, 0));
+        JPanel panel = new JPanel(new GridLayout(1, 2, 16, 0));
         panel.setOpaque(false);
 
         JPanel resultsCard = createSummaryCard(
                 "BOOKS DISPLAYED",
                 "0",
-                "Matching your search"
+                "Books matching your search"
         );
 
         JPanel availableCard = createSummaryCard(
@@ -155,67 +196,77 @@ public class StudentBooksFrame extends JFrame {
             String description
     ) {
 
-        JPanel card = new JPanel(new BorderLayout(10, 5));
+        JPanel card = new JPanel(new BorderLayout());
         card.setBackground(WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(15, 20, 15, 20)
+                new EmptyBorder(14, 20, 14, 20)
         ));
+
+        JPanel textPanel = new JPanel();
+        textPanel.setOpaque(false);
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
 
         JLabel headingLabel = new JLabel(heading);
         headingLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
         headingLabel.setForeground(MUTED);
 
         JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 27));
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 28));
         valueLabel.setForeground(BURGUNDY);
 
         JLabel descriptionLabel = new JLabel(description);
         descriptionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         descriptionLabel.setForeground(MUTED);
 
-        JPanel textPanel = new JPanel();
-        textPanel.setOpaque(false);
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-
         textPanel.add(headingLabel);
-        textPanel.add(Box.createVerticalStrut(5));
+        textPanel.add(Box.createVerticalStrut(4));
         textPanel.add(valueLabel);
         textPanel.add(Box.createVerticalStrut(3));
         textPanel.add(descriptionLabel);
 
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+        decoration.setBorder(new EmptyBorder(0, 15, 0, 10));
+
         card.add(textPanel, BorderLayout.CENTER);
+        card.add(decoration, BorderLayout.EAST);
+
         card.putClientProperty("valueLabel", valueLabel);
 
         return card;
     }
 
-    // BOOK TABLE PANEL
+    // =========================
+    // BOOK TABLE
+    // =========================
+
     private JPanel createBookTablePanel() {
 
         JPanel panel = new JPanel(new BorderLayout(0, 12));
         panel.setBackground(WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(18, 18, 18, 18)
+                new EmptyBorder(17, 17, 17, 17)
         ));
-
-        JLabel sectionTitle = new JLabel("Library Collection");
-        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        sectionTitle.setForeground(BURGUNDY);
-
-        JLabel sectionSubtitle = new JLabel(
-                "Select a book to view its information or request to borrow it."
-        );
-        sectionSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        sectionSubtitle.setForeground(MUTED);
 
         JPanel headingPanel = new JPanel();
         headingPanel.setOpaque(false);
         headingPanel.setLayout(new BoxLayout(headingPanel, BoxLayout.Y_AXIS));
 
+        JLabel sectionTitle = new JLabel("Library Collection");
+        sectionTitle.setFont(new Font("Georgia", Font.BOLD, 20));
+        sectionTitle.setForeground(BURGUNDY);
+
+        JLabel sectionSubtitle = new JLabel(
+                "Browse the available books in the library collection."
+        );
+        sectionSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        sectionSubtitle.setForeground(MUTED);
+
         headingPanel.add(sectionTitle);
-        headingPanel.add(Box.createVerticalStrut(4));
+        headingPanel.add(Box.createVerticalStrut(5));
         headingPanel.add(sectionSubtitle);
 
         String[] columns = {
@@ -226,13 +277,14 @@ public class StudentBooksFrame extends JFrame {
                 "Category",
                 "Publisher",
                 "Year",
-                "Available Copies",
+                "Availability",
                 "Shelf Location",
                 "Cover Image",
                 "Description"
         };
 
         tableModel = new DefaultTableModel(columns, 0) {
+
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -243,10 +295,10 @@ public class StudentBooksFrame extends JFrame {
         bookTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         bookTable.setForeground(TEXT);
         bookTable.setBackground(WHITE);
-        bookTable.setRowHeight(34);
+        bookTable.setRowHeight(58);
         bookTable.setSelectionBackground(LIGHT_GOLD);
         bookTable.setSelectionForeground(BURGUNDY);
-        bookTable.setGridColor(new Color(239, 234, 226));
+        bookTable.setGridColor(BORDER);
         bookTable.setShowVerticalLines(false);
         bookTable.setShowHorizontalLines(true);
         bookTable.setFillsViewportHeight(true);
@@ -254,20 +306,38 @@ public class StudentBooksFrame extends JFrame {
         bookTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JTableHeader tableHeader = bookTable.getTableHeader();
-        tableHeader.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tableHeader.setFont(new Font("Georgia", Font.BOLD, 11));
         tableHeader.setBackground(BURGUNDY);
         tableHeader.setForeground(WHITE);
         tableHeader.setPreferredSize(new Dimension(0, 40));
         tableHeader.setReorderingAllowed(false);
 
-        // Keep cover image and description in the model but hide them
-        // from the visible table.
+        // Hide description column
         bookTable.removeColumn(
                 bookTable.getColumnModel().getColumn(10)
         );
-        bookTable.removeColumn(
-                bookTable.getColumnModel().getColumn(9)
-        );
+
+        // Cover image thumbnail renderer
+        bookTable.getColumnModel()
+                .getColumn(9)
+                .setCellRenderer(new CoverImageRenderer());
+
+        bookTable.getColumnModel().getColumn(0).setPreferredWidth(55);
+        bookTable.getColumnModel().getColumn(1).setPreferredWidth(100);
+        bookTable.getColumnModel().getColumn(2).setPreferredWidth(170);
+        bookTable.getColumnModel().getColumn(3).setPreferredWidth(120);
+        bookTable.getColumnModel().getColumn(4).setPreferredWidth(95);
+        bookTable.getColumnModel().getColumn(5).setPreferredWidth(110);
+        bookTable.getColumnModel().getColumn(6).setPreferredWidth(55);
+        bookTable.getColumnModel().getColumn(7).setPreferredWidth(85);
+        bookTable.getColumnModel().getColumn(8).setPreferredWidth(95);
+        bookTable.getColumnModel().getColumn(9).setPreferredWidth(75);
+
+        bookTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateSelectedBookDetails();
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(bookTable);
         scrollPane.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -279,34 +349,270 @@ public class StudentBooksFrame extends JFrame {
         return panel;
     }
 
-    // SEARCH AND ACTION PANEL
+    // =========================
+    // BOOK DETAILS SIDE PANEL
+    // =========================
+
+    private JPanel createBookDetailsPanel() {
+
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.setBackground(WHITE);
+        panel.setPreferredSize(new Dimension(285, 0));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(15, 15, 15, 15)
+        ));
+
+        // 1. HEADER & COVER CONTAINER
+        JPanel top = new JPanel();
+        top.setOpaque(false);
+        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
+
+        JLabel heading = new JLabel("Selected Book");
+        heading.setFont(new Font("Georgia", Font.BOLD, 18));
+        heading.setForeground(BURGUNDY);
+        heading.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        top.add(heading);
+        top.add(Box.createVerticalStrut(10));
+
+        detailCoverLabel = new JLabel();
+        detailCoverLabel.setOpaque(true);
+        detailCoverLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        detailCoverLabel.setVerticalAlignment(SwingConstants.CENTER);
+        detailCoverLabel.setPreferredSize(new Dimension(150, 190));
+        detailCoverLabel.setMaximumSize(new Dimension(150, 190));
+        detailCoverLabel.setMinimumSize(new Dimension(150, 190));
+        detailCoverLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        showCoverPlaceholder(detailCoverLabel);
+
+        top.add(detailCoverLabel);
+        top.add(Box.createVerticalStrut(10));
+
+        // 2. INFORMATION CONTENT CONTAINER
+        JPanel information = new JPanel();
+        information.setOpaque(false);
+        information.setLayout(new BoxLayout(information, BoxLayout.Y_AXIS));
+        information.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+        detailTitleLabel = new JLabel("Select a book");
+        detailTitleLabel.setFont(new Font("Georgia", Font.BOLD, 15));
+        detailTitleLabel.setForeground(BURGUNDY);
+        detailTitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        detailAuthorLabel = createDetailValue("Author: —");
+        detailYearLabel = createDetailValue("Year: —");
+        detailCategoryLabel = createDetailValue("Category: —");
+        detailAvailabilityLabel = createDetailValue("Availability: —");
+        detailShelfLabel = createDetailValue("Shelf: —");
+
+        detailAuthorLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailYearLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailCategoryLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailAvailabilityLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailShelfLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        information.add(detailTitleLabel);
+        information.add(Box.createVerticalStrut(8));
+        information.add(detailAuthorLabel);
+        information.add(Box.createVerticalStrut(5));
+        information.add(detailYearLabel);
+        information.add(Box.createVerticalStrut(5));
+        information.add(detailCategoryLabel);
+        information.add(Box.createVerticalStrut(5));
+        information.add(detailAvailabilityLabel);
+        information.add(Box.createVerticalStrut(5));
+        information.add(detailShelfLabel);
+
+        JScrollPane infoScrollPane = new JScrollPane(information);
+        infoScrollPane.setBorder(null);
+        infoScrollPane.setOpaque(false);
+        infoScrollPane.getViewport().setOpaque(false);
+
+        // 3. BOTTOM BUTTON CONTAINER
+        JButton requestButton = createButton(
+                "REQUEST TO BORROW", BURGUNDY, WHITE
+        );
+        requestButton.setPreferredSize(new Dimension(220, 40));
+        requestButton.addActionListener(e -> submitBorrowRequest());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(new EmptyBorder(8, 0, 0, 0));
+        buttonPanel.add(requestButton);
+
+        panel.add(top, BorderLayout.NORTH);
+        panel.add(infoScrollPane, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JLabel createDetailValue(String text) {
+
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        label.setForeground(TEXT);
+        return label;
+    }
+
+    private void updateSelectedBookDetails() {
+
+        int selectedRow = bookTable.getSelectedRow();
+
+        if (selectedRow == -1) {
+            detailTitleLabel.setText("Select a book");
+            detailAuthorLabel.setText("Author: —");
+            detailYearLabel.setText("Year: —");
+            detailCategoryLabel.setText("Category: —");
+            detailAvailabilityLabel.setText("Availability: —");
+            detailShelfLabel.setText("Shelf: —");
+
+            showCoverPlaceholder(detailCoverLabel);
+            return;
+        }
+
+        int modelRow = bookTable.convertRowIndexToModel(selectedRow);
+
+        String title = safeValue(tableModel.getValueAt(modelRow, 2));
+        String author = safeValue(tableModel.getValueAt(modelRow, 3));
+        String category = safeValue(tableModel.getValueAt(modelRow, 4));
+        String year = safeValue(tableModel.getValueAt(modelRow, 6));
+        String available = safeValue(tableModel.getValueAt(modelRow, 7));
+        String shelf = safeValue(tableModel.getValueAt(modelRow, 8));
+        String coverImage = safeValue(tableModel.getValueAt(modelRow, 9));
+
+        detailTitleLabel.setText(
+                "<html><div style='width:235px;'>"
+                        + escapeHtml(title)
+                        + "</div></html>"
+        );
+
+        detailAuthorLabel.setText("Author: " + author);
+        detailYearLabel.setText("Year: " + year);
+        detailCategoryLabel.setText("Category: " + category);
+        detailShelfLabel.setText("Shelf: " + shelf);
+
+        int copies = 0;
+
+        try {
+            copies = Integer.parseInt(available);
+        } catch (NumberFormatException ignored) {
+        }
+
+        detailAvailabilityLabel.setText(
+                copies > 0
+                        ? "Availability: " + copies + " cop(y/ies)"
+                        : "Availability: Not Available"
+        );
+
+        JLabel cover = createCoverLabel(coverImage);
+        detailCoverLabel.setIcon(cover.getIcon());
+        detailCoverLabel.setText(cover.getText());
+        detailCoverLabel.setForeground(BURGUNDY);
+        detailCoverLabel.setBackground(LIGHT_GOLD);
+    }
+
+    // =========================
+    // COVER IMAGE SCALING FIX
+    // =========================
+
+    private JLabel createCoverLabel(String coverImagePath) {
+        JLabel label = new JLabel();
+        label.setOpaque(true);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setVerticalAlignment(SwingConstants.CENTER);
+        label.setBackground(LIGHT_GOLD);
+        label.setForeground(BURGUNDY);
+        label.setFont(new Font("Georgia", Font.BOLD, 12));
+
+        if (coverImagePath != null && !coverImagePath.isBlank()) {
+            try {
+                File imgFile = new File(coverImagePath);
+                BufferedImage img = null;
+                if (imgFile.exists()) {
+                    img = ImageIO.read(imgFile);
+                } else {
+                    URL url = getClass().getResource(coverImagePath);
+                    if (url != null) {
+                        img = ImageIO.read(url);
+                    }
+                }
+
+                if (img != null) {
+                    // Smooth scaling to fit inside 150x190 without cropping or distortion
+                    Image scaled = getScaledImage(img, 150, 190);
+                    label.setIcon(new ImageIcon(scaled));
+                    label.setText("");
+                    return label;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        showCoverPlaceholder(label);
+        return label;
+    }
+
+    private Image getScaledImage(BufferedImage src, int maxWidth, int maxHeight) {
+        double widthScale = (double) maxWidth / src.getWidth();
+        double heightScale = (double) maxHeight / src.getHeight();
+        double scale = Math.min(widthScale, heightScale);
+
+        int newWidth = (int) (src.getWidth() * scale);
+        int newHeight = (int) (src.getHeight() * scale);
+
+        return src.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+    }
+
+    private void showCoverPlaceholder(JLabel label) {
+        label.setIcon(null);
+        label.setText("<html><center><b>BOOK COVER</b><br><small>No cover image available</small></center></html>");
+        label.setBackground(LIGHT_GOLD);
+        label.setForeground(BURGUNDY);
+    }
+
+    // =========================
+    // SEARCH AND FILTER PANEL
+    // =========================
+
     private JPanel createActionPanel() {
 
-        JPanel outerPanel = new JPanel(new BorderLayout(0, 12));
+        JPanel outerPanel = new JPanel(new BorderLayout(0, 10));
         outerPanel.setOpaque(false);
 
-        JPanel searchPanel = new JPanel(new BorderLayout(10, 0));
-        searchPanel.setOpaque(false);
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        controls.setOpaque(false);
 
-        JLabel searchLabel = new JLabel("Search books");
+        JLabel searchLabel = new JLabel("Search:");
         searchLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
         searchLabel.setForeground(TEXT);
 
         searchField = new JTextField();
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        searchField.setPreferredSize(new Dimension(250, 39));
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        searchField.setPreferredSize(new Dimension(190, 37));
         searchField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(5, 10, 5, 10)
+                new EmptyBorder(5, 9, 5, 9)
         ));
 
-        JPanel searchInputPanel = new JPanel(new BorderLayout(8, 0));
-        searchInputPanel.setOpaque(false);
-        searchInputPanel.add(searchLabel, BorderLayout.WEST);
-        searchInputPanel.add(searchField, BorderLayout.CENTER);
+        JButton searchButton = createButton(
+                "Search", BURGUNDY, WHITE
+        );
 
-        JButton searchButton = createButton("Search", BURGUNDY, WHITE);
-        JButton refreshButton = createButton("Refresh", LIGHT_GOLD, BURGUNDY);
+        JLabel categoryLabel = new JLabel("Browse by Category:");
+        categoryLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        categoryLabel.setForeground(TEXT);
+
+        categoryFilter = new JComboBox<>();
+        categoryFilter.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        categoryFilter.setPreferredSize(new Dimension(155, 37));
+        categoryFilter.setBackground(WHITE);
+
+        JButton refreshButton = createButton(
+                "Refresh", LIGHT_GOLD, BURGUNDY
+        );
 
         searchButton.addActionListener(e ->
                 loadBooks(searchField.getText().trim())
@@ -316,20 +622,25 @@ public class StudentBooksFrame extends JFrame {
                 loadBooks(searchField.getText().trim())
         );
 
+        categoryFilter.addActionListener(e -> {
+            if (!loadingCategories) {
+                loadBooks(searchField.getText().trim());
+            }
+        });
+
         refreshButton.addActionListener(e -> {
             searchField.setText("");
+            categoryFilter.setSelectedIndex(0);
             loadBooks("");
         });
 
-        JPanel searchButtons = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT, 8, 0)
-        );
-        searchButtons.setOpaque(false);
-        searchButtons.add(searchButton);
-        searchButtons.add(refreshButton);
-
-        searchPanel.add(searchInputPanel, BorderLayout.CENTER);
-        searchPanel.add(searchButtons, BorderLayout.EAST);
+        controls.add(searchLabel);
+        controls.add(searchField);
+        controls.add(searchButton);
+        controls.add(Box.createHorizontalStrut(8));
+        controls.add(categoryLabel);
+        controls.add(categoryFilter);
+        controls.add(refreshButton);
 
         JButton detailsButton = createButton(
                 "View Details", LIGHT_GOLD, BURGUNDY
@@ -342,24 +653,62 @@ public class StudentBooksFrame extends JFrame {
         detailsButton.addActionListener(e -> showBookDetails());
         requestButton.addActionListener(e -> submitBorrowRequest());
 
-        JPanel actionButtons = new JPanel(
+        JPanel actions = new JPanel(
                 new FlowLayout(FlowLayout.RIGHT, 8, 0)
         );
-        actionButtons.setOpaque(false);
-        actionButtons.add(detailsButton);
-        actionButtons.add(requestButton);
+        actions.setOpaque(false);
+        actions.add(detailsButton);
+        actions.add(requestButton);
 
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setOpaque(false);
-        bottomPanel.add(actionButtons, BorderLayout.EAST);
-
-        outerPanel.add(searchPanel, BorderLayout.NORTH);
-        outerPanel.add(bottomPanel, BorderLayout.SOUTH);
+        outerPanel.add(controls, BorderLayout.CENTER);
+        outerPanel.add(actions, BorderLayout.SOUTH);
 
         return outerPanel;
     }
 
+    // =========================
+    // CATEGORY LOADING
+    // =========================
+
+    private void loadCategories() {
+
+        if (categoryFilter == null) {
+            return;
+        }
+
+        loadingCategories = true;
+
+        categoryFilter.removeAllItems();
+        categoryFilter.addItem("All Categories");
+
+        String sql = """
+                SELECT DISTINCT category
+                FROM books
+                WHERE category IS NOT NULL
+                AND TRIM(category) <> ''
+                ORDER BY category ASC
+                """;
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet result = statement.executeQuery()) {
+
+            while (result.next()) {
+                categoryFilter.addItem(result.getString("category"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        categoryFilter.setSelectedIndex(0);
+        loadingCategories = false;
+    }
+
+    // =========================
     // BUTTON STYLE
+    // =========================
+
     private JButton createButton(
             String text,
             Color background,
@@ -382,13 +731,63 @@ public class StudentBooksFrame extends JFrame {
         return button;
     }
 
+    private String findCoverImage(String bookTitle) {
+        if (bookTitle == null || bookTitle.isBlank()) return null;
+        File imagesFolder = new File(
+                System.getProperty("user.dir"), "src/main/resources/images"
+        );
+
+        if (!imagesFolder.exists() || !imagesFolder.isDirectory()) {
+            return null;
+        }
+
+        String targetName = bookTitle.toLowerCase()
+                .replaceAll("[^a-z0-9]", "");
+
+        File[] files = imagesFolder.listFiles();
+
+        if (files == null) {
+            return null;
+        }
+
+        for (File file : files) {
+
+            if (!file.isFile()) {
+                continue;
+            }
+
+            String fileName = file.getName();
+
+            if (!fileName.matches("(?i).*\\.(jpg|jpeg|png|gif|bmp)$")) {
+                continue;
+            }
+
+            String imageName = fileName
+                    .substring(0, fileName.lastIndexOf('.'))
+                    .toLowerCase()
+                    .replaceAll("[^a-z0-9]", "");
+
+            if (imageName.equals(targetName)) {
+                return file.getAbsolutePath();
+            }
+        }
+
+        return null;
+    }
+
+    // =========================
     // LOAD BOOKS
+    // =========================
+
     private void loadBooks(String search) {
 
         tableModel.setRowCount(0);
 
-        // SELECT * allows the program to check optional columns
-        // without requiring a database structure change.
+        String selectedCategory = categoryFilter == null
+                || categoryFilter.getSelectedItem() == null
+                ? "All Categories"
+                : String.valueOf(categoryFilter.getSelectedItem());
+
         String sql = """
                 SELECT *
                 FROM books
@@ -398,6 +797,7 @@ public class StudentBooksFrame extends JFrame {
                     OR category LIKE ?
                     OR isbn LIKE ?
                 )
+                AND (? = 'All Categories' OR category = ?)
                 ORDER BY title ASC
                 """;
 
@@ -410,6 +810,8 @@ public class StudentBooksFrame extends JFrame {
             statement.setString(2, keyword);
             statement.setString(3, keyword);
             statement.setString(4, keyword);
+            statement.setString(5, selectedCategory);
+            statement.setString(6, selectedCategory);
 
             try (ResultSet result = statement.executeQuery()) {
 
@@ -420,9 +822,11 @@ public class StudentBooksFrame extends JFrame {
                 boolean hasDescription = false;
 
                 for (int i = 1; i <= columnCount; i++) {
+
                     String columnName = metadata.getColumnLabel(i);
 
                     if (columnName != null) {
+
                         if (columnName.equalsIgnoreCase("cover_image")) {
                             hasCoverImage = true;
                         }
@@ -435,9 +839,13 @@ public class StudentBooksFrame extends JFrame {
 
                 while (result.next()) {
 
-                    String coverImage = hasCoverImage
-                            ? result.getString("cover_image")
-                            : null;
+                    String title = result.getString("title");
+
+                    String coverImage = findCoverImage(title);
+
+                    if (coverImage == null && hasCoverImage) {
+                        coverImage = result.getString("cover_image");
+                    }
 
                     String description = hasDescription
                             ? result.getString("description")
@@ -461,6 +869,12 @@ public class StudentBooksFrame extends JFrame {
 
             updateSummary();
 
+            if (tableModel.getRowCount() > 0) {
+                bookTable.setRowSelectionInterval(0, 0);
+            } else {
+                updateSelectedBookDetails();
+            }
+
         } catch (SQLException e) {
 
             JOptionPane.showMessageDialog(
@@ -474,13 +888,17 @@ public class StudentBooksFrame extends JFrame {
         }
     }
 
-    // UPDATE SUMMARY CARDS
+    // =========================
+    // UPDATE SUMMARY
+    // =========================
+
     private void updateSummary() {
 
         int totalRows = tableModel.getRowCount();
         int totalAvailable = 0;
 
         for (int i = 0; i < totalRows; i++) {
+
             totalAvailable += Integer.parseInt(
                     String.valueOf(tableModel.getValueAt(i, 7))
             );
@@ -490,7 +908,10 @@ public class StudentBooksFrame extends JFrame {
         availableLabel.setText(String.valueOf(totalAvailable));
     }
 
-    // SHOW CUSTOM BOOK DETAILS WINDOW
+    // =========================
+    // SHOW BOOK DETAILS WINDOW
+    // =========================
+
     private void showBookDetails() {
 
         int selectedRow = bookTable.getSelectedRow();
@@ -526,11 +947,7 @@ public class StudentBooksFrame extends JFrame {
             description = "No description is available for this book yet.";
         }
 
-        JDialog dialog = new JDialog(
-                this,
-                "Book Details",
-                true
-        );
+        JDialog dialog = new JDialog(this, "Book Details", true);
 
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setSize(850, 590);
@@ -539,14 +956,13 @@ public class StudentBooksFrame extends JFrame {
         dialog.setLayout(new BorderLayout());
         dialog.getContentPane().setBackground(CREAM);
 
-        // DIALOG HEADER
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(BURGUNDY);
         header.setBorder(new EmptyBorder(18, 25, 18, 20));
 
         JLabel headerTitle = new JLabel("BOOK DETAILS");
-        headerTitle.setFont(new Font("Segoe UI", Font.BOLD, 19));
-        headerTitle.setForeground(WHITE);
+        headerTitle.setFont(new Font("Georgia", Font.BOLD, 19));
+        headerTitle.setForeground(GOLD);
 
         JButton closeXButton = new JButton("X");
         closeXButton.setFont(new Font("Segoe UI", Font.BOLD, 15));
@@ -560,24 +976,32 @@ public class StudentBooksFrame extends JFrame {
         header.add(headerTitle, BorderLayout.CENTER);
         header.add(closeXButton, BorderLayout.EAST);
 
-        // MAIN DETAILS AREA
         JPanel content = new JPanel(new BorderLayout(22, 18));
         content.setBackground(CREAM);
-        content.setBorder(new EmptyBorder(22, 25, 18, 25));
+        content.setBorder(new EmptyBorder(15, 25, 10, 25));
 
         // LEFT: BOOK COVER
         JPanel coverPanel = new JPanel(new BorderLayout());
         coverPanel.setBackground(WHITE);
         coverPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(10, 10, 10, 10)
+                new EmptyBorder(12, 12, 12, 12)
         ));
-        coverPanel.setPreferredSize(new Dimension(235, 330));
+
+        coverPanel.setPreferredSize(new Dimension(280, 300));
+        coverPanel.setMinimumSize(new Dimension(220, 250));
+
+        JLabel coverHeading = new JLabel("SELECTED BOOK", SwingConstants.CENTER);
+        coverHeading.setFont(new Font("Georgia", Font.BOLD, 15));
+        coverHeading.setForeground(BURGUNDY);
+        coverHeading.setBorder(new EmptyBorder(5, 0, 12, 0));
 
         JLabel coverLabel = createCoverLabel(coverImage);
+        coverLabel.setPreferredSize(new Dimension(250, 250));
+
+        coverPanel.add(coverHeading, BorderLayout.NORTH);
         coverPanel.add(coverLabel, BorderLayout.CENTER);
 
-        // RIGHT: BOOK INFORMATION
         JPanel rightPanel = new JPanel(new BorderLayout(0, 15));
         rightPanel.setOpaque(false);
 
@@ -586,7 +1010,7 @@ public class StudentBooksFrame extends JFrame {
                         + escapeHtml(title)
                         + "</div></html>"
         );
-        bookTitle.setFont(new Font("Segoe UI", Font.BOLD, 23));
+        bookTitle.setFont(new Font("Georgia", Font.BOLD, 23));
         bookTitle.setForeground(BURGUNDY);
 
         JPanel informationPanel = new JPanel(new GridLayout(0, 1, 5, 8));
@@ -619,398 +1043,193 @@ public class StudentBooksFrame extends JFrame {
         topDetails.add(coverPanel, BorderLayout.WEST);
         topDetails.add(rightPanel, BorderLayout.CENTER);
 
-        // DESCRIPTION SECTION
         JPanel descriptionPanel = new JPanel(new BorderLayout(0, 8));
         descriptionPanel.setBackground(WHITE);
         descriptionPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(14, 17, 14, 17)
+                new EmptyBorder(12, 15, 12, 15)
         ));
 
-        JLabel descriptionTitle = new JLabel("DESCRIPTION");
-        descriptionTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        descriptionTitle.setForeground(BURGUNDY);
+        JLabel descHeader = new JLabel("DESCRIPTION");
+        descHeader.setFont(new Font("Georgia", Font.BOLD, 13));
+        descHeader.setForeground(BURGUNDY);
 
-        JTextArea descriptionText = new JTextArea(description);
-        descriptionText.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        descriptionText.setForeground(TEXT);
-        descriptionText.setBackground(WHITE);
-        descriptionText.setLineWrap(true);
-        descriptionText.setWrapStyleWord(true);
-        descriptionText.setEditable(false);
-        descriptionText.setFocusable(false);
+        JTextArea descArea = new JTextArea(description);
+        descArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        descArea.setForeground(TEXT);
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        descArea.setEditable(false);
+        descArea.setOpaque(false);
 
-        JScrollPane descriptionScroll = new JScrollPane(descriptionText);
-        descriptionScroll.setBorder(null);
-        descriptionScroll.setPreferredSize(new Dimension(500, 85));
-        descriptionScroll.getViewport().setBackground(WHITE);
+        descriptionPanel.add(descHeader, BorderLayout.NORTH);
+        descriptionPanel.add(descArea, BorderLayout.CENTER);
 
-        descriptionPanel.add(descriptionTitle, BorderLayout.NORTH);
-        descriptionPanel.add(descriptionScroll, BorderLayout.CENTER);
-
-        JPanel centerPanel = new JPanel(new BorderLayout(0, 15));
-        centerPanel.setOpaque(false);
-        centerPanel.add(topDetails, BorderLayout.CENTER);
-        centerPanel.add(descriptionPanel, BorderLayout.SOUTH);
-
-        content.add(centerPanel, BorderLayout.CENTER);
-
-        // BOTTOM BUTTONS
-        JPanel footer = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT, 12, 15)
-        );
-        footer.setBackground(WHITE);
-        footer.setBorder(BorderFactory.createMatteBorder(
-                1, 0, 0, 0, BORDER
-        ));
-
-        JButton closeButton = createButton(
-                "CLOSE", LIGHT_GOLD, BURGUNDY
-        );
-
-        JButton borrowButton = createButton(
-                "BORROW BOOK", BURGUNDY, WHITE
-        );
-
-        closeButton.setPreferredSize(new Dimension(115, 40));
-        borrowButton.setPreferredSize(new Dimension(155, 40));
-
-        closeButton.addActionListener(e -> dialog.dispose());
-
-        borrowButton.addActionListener(e -> {
-            dialog.dispose();
-            submitBorrowRequest();
-        });
-
-        footer.add(closeButton);
-        footer.add(borrowButton);
+        content.add(topDetails, BorderLayout.CENTER);
+        content.add(descriptionPanel, BorderLayout.SOUTH);
 
         dialog.add(header, BorderLayout.NORTH);
         dialog.add(content, BorderLayout.CENTER);
-        dialog.add(footer, BorderLayout.SOUTH);
-
         dialog.setVisible(true);
     }
 
-    // BOOK COVER IMAGE OR PLACEHOLDER
-    private JLabel createCoverLabel(String imagePath) {
-
-        JLabel label = new JLabel("", SwingConstants.CENTER);
-        label.setPreferredSize(new Dimension(210, 300));
-        label.setOpaque(true);
-        label.setBackground(LIGHT_GOLD);
-
-        if (imagePath == null || imagePath.isBlank()) {
-            showCoverPlaceholder(label);
-            return label;
-        }
-
-        try {
-            Image image;
-
-            if (imagePath.startsWith("http://")
-                    || imagePath.startsWith("https://")) {
-
-                image = ImageIO.read(new URL(imagePath));
-
-            } else {
-
-                File imageFile = new File(imagePath);
-
-                if (!imageFile.isAbsolute()) {
-                    imageFile = new File(
-                            System.getProperty("user.dir"),
-                            imagePath
-                    );
-                }
-
-                image = ImageIO.read(imageFile);
-            }
-
-            if (image == null) {
-                showCoverPlaceholder(label);
-                return label;
-            }
-
-            Image scaledImage = image.getScaledInstance(
-                    210,
-                    300,
-                    Image.SCALE_SMOOTH
-            );
-
-            label.setIcon(new ImageIcon(scaledImage));
-
-        } catch (Exception e) {
-            showCoverPlaceholder(label);
-        }
-
-        return label;
-    }
-
-    private void showCoverPlaceholder(JLabel label) {
-
-        label.setIcon(null);
-        label.setText(
-                "<html><div style='text-align:center;'>"
-                        + "<span style='font-size:42px;'>📚</span><br><br>"
-                        + "<b>BOOK COVER</b><br>"
-                        + "<span style='font-size:11px;'>"
-                        + "No cover image available"
-                        + "</span></div></html>"
-        );
-        label.setForeground(BURGUNDY);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-    }
-
-    // BOOK INFORMATION ROW
-    private void addDetail(
-            JPanel panel,
-            String label,
-            String value
-    ) {
-
-        JPanel row = new JPanel(new BorderLayout(10, 0));
+    private void addDetail(JPanel panel, String labelText, String valueText) {
+        JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
 
-        JLabel nameLabel = new JLabel(label + ":");
-        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        nameLabel.setForeground(MUTED);
+        JLabel label = new JLabel(labelText + ":");
+        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setForeground(MUTED);
 
-        JLabel valueLabel = new JLabel(
-                "<html><div style='width:220px;'>"
-                        + escapeHtml(value)
-                        + "</div></html>"
-        );
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        valueLabel.setForeground(TEXT);
+        JLabel value = new JLabel(valueText);
+        value.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        value.setForeground(TEXT);
 
-        row.add(nameLabel, BorderLayout.WEST);
-        row.add(valueLabel, BorderLayout.CENTER);
+        row.add(label, BorderLayout.WEST);
+        row.add(value, BorderLayout.EAST);
 
         panel.add(row);
     }
 
-    private String safeValue(Object value) {
-
-        if (value == null) {
-            return "";
-        }
-
-        return String.valueOf(value);
-    }
-
-    private String escapeHtml(String value) {
-
-        if (value == null) {
-            return "";
-        }
-
-        return value
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
-    }
-
-    // SUBMIT BORROWING REQUEST WITH PREFERRED RETURN DATE
     private void submitBorrowRequest() {
-
         int selectedRow = bookTable.getSelectedRow();
 
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Please select a book first.",
-                    "No Book Selected",
+                    "Please select a book to request.",
+                    "No Selection",
                     JOptionPane.WARNING_MESSAGE
             );
             return;
         }
 
         int modelRow = bookTable.convertRowIndexToModel(selectedRow);
-
-        int bookId = (int) tableModel.getValueAt(modelRow, 0);
-
-        String bookTitle = String.valueOf(
-                tableModel.getValueAt(modelRow, 2)
+        int bookId = Integer.parseInt(
+                String.valueOf(tableModel.getValueAt(modelRow, 0))
         );
-
-        int availableCopies = Integer.parseInt(
+        String title = safeValue(tableModel.getValueAt(modelRow, 2));
+        int available = Integer.parseInt(
                 String.valueOf(tableModel.getValueAt(modelRow, 7))
         );
 
-        if (availableCopies <= 0) {
+        if (available <= 0) {
             JOptionPane.showMessageDialog(
                     this,
-                    "This book currently has no available copies.",
-                    "Book Unavailable",
-                    JOptionPane.WARNING_MESSAGE
+                    "Sorry, this book is currently unavailable for borrowing.",
+                    "Not Available",
+                    JOptionPane.ERROR_MESSAGE
             );
             return;
         }
 
-        LocalDate today = LocalDate.now();
-
-        LocalDate defaultReturnDate = today.plusDays(7);
-        LocalDate maximumReturnDate = today.plusDays(365);
-
-        ZoneId zone = ZoneId.systemDefault();
-
-        Date defaultDate = Date.from(
-                defaultReturnDate.atStartOfDay(zone).toInstant()
-        );
-
-        Date minimumDate = Date.from(
-                today.plusDays(1).atStartOfDay(zone).toInstant()
-        );
-
-        Date maximumDate = Date.from(
-                maximumReturnDate.atStartOfDay(zone).toInstant()
-        );
-
-        SpinnerDateModel dateModel = new SpinnerDateModel(
-                defaultDate,
-                minimumDate,
-                maximumDate,
-                Calendar.DAY_OF_MONTH
-        );
-
-        JSpinner returnDateSpinner = new JSpinner(dateModel);
-
-        returnDateSpinner.setEditor(
-                new JSpinner.DateEditor(returnDateSpinner, "MMMM dd, yyyy")
-        );
-
-        JPanel datePanel = new JPanel(new GridLayout(0, 1, 5, 8));
-        datePanel.setBorder(new EmptyBorder(12, 12, 12, 12));
-
-        JLabel bookLabel = new JLabel("Book: " + bookTitle);
-        JLabel instructionLabel = new JLabel(
-                "Select your preferred return date:"
-        );
-
-        JLabel noteLabel = new JLabel(
-                "The librarian will review your requested date."
-        );
-
-        bookLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        bookLabel.setForeground(BURGUNDY);
-
-        instructionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        noteLabel.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-        noteLabel.setForeground(MUTED);
-
-        returnDateSpinner.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-
-        datePanel.add(bookLabel);
-        datePanel.add(instructionLabel);
-        datePanel.add(returnDateSpinner);
-        datePanel.add(noteLabel);
-
-        int choice = JOptionPane.showConfirmDialog(
+        int confirm = JOptionPane.showConfirmDialog(
                 this,
-                datePanel,
-                "Choose Preferred Return Date",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-
-        if (choice != JOptionPane.OK_OPTION) {
-            return;
-        }
-
-        Date selectedDate = (Date) returnDateSpinner.getValue();
-
-        LocalDate requestedReturnDate = selectedDate.toInstant()
-                .atZone(zone)
-                .toLocalDate();
-
-        if (!requestedReturnDate.isAfter(today)) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "The return date must be at least tomorrow.",
-                    "Invalid Return Date",
-                    JOptionPane.WARNING_MESSAGE
-            );
-            return;
-        }
-
-        if (requestedReturnDate.isAfter(maximumReturnDate)) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "The return date cannot be more than 365 days from today.",
-                    "Invalid Return Date",
-                    JOptionPane.WARNING_MESSAGE
-            );
-            return;
-        }
-
-        int borrowingDays = (int) ChronoUnit.DAYS.between(
-                today,
-                requestedReturnDate
-        );
-
-        String formattedReturnDate =
-                requestedReturnDate.format(DATE_FORMAT);
-
-        int confirmation = JOptionPane.showConfirmDialog(
-                this,
-                "Submit a borrowing request for:\n\n"
-                        + bookTitle
-                        + "\n\nPreferred Return Date: "
-                        + formattedReturnDate
-                        + "\nBorrowing Duration: "
-                        + borrowingDays
-                        + " day(s)\n\n"
-                        + "The librarian must approve your request "
-                        + "before the book is borrowed.",
-                "Confirm Borrowing Request",
+                "Do you want to submit a borrow request for:\n\"" + title + "\"?",
+                "Confirm Borrow Request",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
         );
 
-        if (confirmation != JOptionPane.YES_OPTION) {
-            return;
-        }
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                BorrowRequestService service = new BorrowRequestService();
 
-        try {
+                // Call the void method directly without assigning it to a boolean
+                service.submitRequest(session, bookId);
 
-            BorrowRequestService.submitRequest(
-                    session,
-                    bookId,
-                    requestedReturnDate
-            );
+                // If execution completes without throwing an exception, the request succeeded
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Borrow request submitted successfully!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                loadBooks(searchField.getText().trim());
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Your borrowing request has been submitted!\n\n"
-                            + "Book: " + bookTitle
-                            + "\nPreferred Return Date: "
-                            + formattedReturnDate
-                            + "\n\nYou can check its status in "
-                            + "My Borrowing Requests.",
-                    "Request Submitted",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            loadBooks(searchField.getText().trim());
-
-        } catch (SQLException
-                 | IllegalArgumentException
-                 | SecurityException
-                 | IllegalStateException e) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    e.getMessage() == null
-                            ? "An unexpected error occurred while submitting your request."
-                            : e.getMessage(),
-                    "Unable to Submit Request",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            e.printStackTrace();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Failed to submit borrow request: " + e.getMessage(),
+                        "Request Failed",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                e.printStackTrace();
+            }
         }
     }
-}
+
+    // =========================
+    // HELPER METHODS
+    // =========================
+
+    private String safeValue(Object obj) {
+        return obj == null ? "" : String.valueOf(obj).trim();
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    // =========================
+    // TABLE CELL RENDERER FOR COVER IMAGES
+    // =========================
+
+    // =========================
+    // TABLE CELL RENDERER FOR COVER IMAGES
+    // =========================
+
+    private class CoverImageRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable table, Object value, boolean isSelected,
+                boolean hasFocus, int row, int column) {
+
+            JLabel label = new JLabel();
+            label.setOpaque(true);
+            label.setHorizontalAlignment(SwingConstants.CENTER);
+            label.setVerticalAlignment(SwingConstants.CENTER);
+
+            if (isSelected) {
+                label.setBackground(LIGHT_GOLD);
+            } else {
+                label.setBackground(WHITE);
+            }
+
+            String imagePath = safeValue(value);
+
+            if (!imagePath.isEmpty()) {
+                try {
+                    File imgFile = new File(imagePath);
+                    BufferedImage img = null;
+                    if (imgFile.exists()) {
+                        img = ImageIO.read(imgFile);
+                    } else {
+                        URL url = getClass().getResource(imagePath);
+                        if (url != null) {
+                            img = ImageIO.read(url);
+                        }
+                    }
+
+                    if (img != null) {
+                        // Smooth scaling to fit inside 40x50 table cell bounds without cropping
+                        Image scaled = getScaledImage(img, 40, 50);
+                        label.setIcon(new ImageIcon(scaled));
+                        label.setText("");
+                        return label;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            // Fallback placeholder text if image path is empty or unreadable
+            label.setFont(new Font("Segoe UI", Font.BOLD, 10));
+            label.setForeground(MUTED);
+            label.setText("BOOK");
+            return label;
+        }
+    }
+    }

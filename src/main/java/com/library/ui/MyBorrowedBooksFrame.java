@@ -33,15 +33,15 @@ public class MyBorrowedBooksFrame extends JFrame {
     private final DateTimeFormatter dateFormatter =
             DateTimeFormatter.ofPattern("MMMM dd, yyyy");
 
-    private static final Color BURGUNDY = new Color(105, 25, 43);
-    private static final Color DARK_BURGUNDY = new Color(78, 17, 32);
-    private static final Color GOLD = new Color(205, 166, 85);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 48, 48);
-    private static final Color MUTED = new Color(125, 116, 112);
-    private static final Color BORDER = new Color(230, 222, 211);
-    private static final Color LIGHT_GOLD = new Color(248, 241, 226);
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     public MyBorrowedBooksFrame(UserSession session) {
 
@@ -81,8 +81,8 @@ public class MyBorrowedBooksFrame extends JFrame {
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
 
         JLabel titleLabel = new JLabel("My Borrowed Books");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 27));
-        titleLabel.setForeground(WHITE);
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 27));
+        titleLabel.setForeground(GOLD);
 
         JLabel subtitleLabel = new JLabel(
                 "Track your active loans, due dates, and return requests."
@@ -182,7 +182,14 @@ public class MyBorrowedBooksFrame extends JFrame {
         textPanel.add(Box.createVerticalStrut(3));
         textPanel.add(descriptionLabel);
 
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+        decoration.setBorder(new EmptyBorder(0, 15, 0, 10));
+
         card.add(textPanel, BorderLayout.CENTER);
+        card.add(decoration, BorderLayout.EAST);
+
         card.putClientProperty("valueLabel", valueLabel);
 
         return card;
@@ -250,7 +257,7 @@ public class MyBorrowedBooksFrame extends JFrame {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JTableHeader tableHeader = table.getTableHeader();
-        tableHeader.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tableHeader.setFont(new Font("Georgia", Font.BOLD, 11));
         tableHeader.setBackground(BURGUNDY);
         tableHeader.setForeground(WHITE);
         tableHeader.setPreferredSize(new Dimension(0, 40));

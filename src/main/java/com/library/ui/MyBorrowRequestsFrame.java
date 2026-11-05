@@ -18,16 +18,18 @@ import java.util.List;
 
 public class MyBorrowRequestsFrame extends JFrame {
 
-    private static final Color BURGUNDY = new Color(91, 28, 43);
-    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private static final Color GOLD = new Color(205, 164, 82);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 45, 45);
-    private static final Color MUTED = new Color(125, 115, 110);
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
     private static final Color GREEN = new Color(38, 125, 82);
     private static final Color RED = new Color(175, 55, 55);
     private static final Color ORANGE = new Color(190, 125, 35);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     private final UserSession session;
     private final DefaultTableModel tableModel;
@@ -68,8 +70,8 @@ public class MyBorrowRequestsFrame extends JFrame {
         headingPanel.setLayout(new BoxLayout(headingPanel, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel("My Borrowing Requests");
-        title.setFont(new Font("Serif", Font.BOLD, 27));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "Track your requests, approval status, and preferred return dates."
@@ -84,7 +86,7 @@ public class MyBorrowRequestsFrame extends JFrame {
         header.add(headingPanel, BorderLayout.WEST);
 
         JLabel logo = new JLabel("LIBRARYLINK");
-        logo.setFont(new Font("Serif", Font.BOLD, 18));
+        logo.setFont(new Font("Georgia", Font.BOLD, 18));
         logo.setForeground(GOLD);
         header.add(logo, BorderLayout.EAST);
 
@@ -141,7 +143,8 @@ public class MyBorrowRequestsFrame extends JFrame {
         requestTable.setFont(new Font("SansSerif", Font.PLAIN, 13));
         requestTable.setForeground(TEXT);
         requestTable.setBackground(WHITE);
-        requestTable.setSelectionBackground(new Color(245, 231, 205));
+        requestTable.setSelectionBackground(LIGHT_GOLD);
+        requestTable.setSelectionForeground(TEXT);
         requestTable.setSelectionForeground(TEXT);
         requestTable.setRowHeight(38);
         requestTable.setShowGrid(true);
@@ -151,7 +154,7 @@ public class MyBorrowRequestsFrame extends JFrame {
         requestTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JTableHeader tableHeader = requestTable.getTableHeader();
-        tableHeader.setFont(new Font("SansSerif", Font.BOLD, 12));
+        tableHeader.setFont(new Font("Georgia", Font.BOLD, 11));
         tableHeader.setBackground(BURGUNDY);
         tableHeader.setForeground(WHITE);
         tableHeader.setPreferredSize(new Dimension(0, 43));
@@ -210,7 +213,7 @@ public class MyBorrowRequestsFrame extends JFrame {
         tableHeading.setOpaque(false);
 
         JLabel tableTitle = new JLabel("Borrowing Request History");
-        tableTitle.setFont(new Font("SansSerif", Font.BOLD, 17));
+        tableTitle.setFont(new Font("Georgia", Font.BOLD, 17));
         tableTitle.setForeground(BURGUNDY);
 
         resultLabel = new JLabel("Your submitted requests");
@@ -268,25 +271,40 @@ public class MyBorrowRequestsFrame extends JFrame {
         ));
 
         JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+        headingLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         headingLabel.setForeground(MUTED);
 
-        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 27));
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 27));
         valueLabel.setForeground(accent);
 
-        card.add(headingLabel, BorderLayout.NORTH);
-        card.add(valueLabel, BorderLayout.CENTER);
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setOpaque(false);
+
+        textPanel.add(headingLabel);
+        textPanel.add(Box.createVerticalStrut(8));
+        textPanel.add(valueLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        card.add(textPanel, BorderLayout.CENTER);
+        card.add(decoration, BorderLayout.EAST);
 
         return card;
     }
 
     private JButton createButton(String text, Color background) {
         JButton button = new JButton(text);
-        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setForeground(WHITE);
         button.setBackground(background);
         button.setFocusPainted(false);
-        button.setBorder(new EmptyBorder(12, 20, 12, 20));
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD, 1),
+                new EmptyBorder(10, 18, 10, 18)
+        ));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
     }

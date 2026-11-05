@@ -24,54 +24,52 @@ public class ManageMembersFrame extends JFrame {
     private final JLabel activeLabel;
     private final JLabel inactiveLabel;
 
-    private final Color burgundy = new Color(105, 25, 43);
-    private final Color darkBurgundy = new Color(75, 15, 30);
-    private final Color gold = new Color(205, 164, 85);
-    private final Color cream = new Color(250, 247, 240);
-    private final Color white = Color.WHITE;
-    private final Color textColor = new Color(55, 48, 48);
-    private final Color muted = new Color(125, 115, 112);
-    private final Color borderColor = new Color(232, 224, 215);
+    // LIBRARYLINK THEME
+    private final Color BURGUNDY = new Color(75, 20, 36);
+    private final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private final Color GOLD = new Color(176, 141, 87);
+    private final Color CREAM = new Color(243, 235, 221);
+    private final Color WHITE = new Color(255, 252, 245);
+    private final Color TEXT = new Color(53, 37, 31);
+    private final Color MUTED = new Color(130, 115, 103);
+    private final Color BORDER = new Color(222, 210, 191);
+    private final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     public ManageMembersFrame() {
 
-        setTitle("Manage Library Members");
+        setTitle("LibraryLink - Manage Members");
         setSize(1350, 780);
         setMinimumSize(new Dimension(1050, 650));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        getContentPane().setBackground(cream);
+        getContentPane().setBackground(CREAM);
         setLayout(new BorderLayout());
 
         // HEADER
         JPanel header = new JPanel(new BorderLayout(15, 10));
-        header.setBackground(burgundy);
-        header.setBorder(new EmptyBorder(22, 28, 22, 28));
+        header.setBackground(BURGUNDY);
+        header.setBorder(new EmptyBorder(22, 30, 22, 30));
 
         JPanel titlePanel = new JPanel();
         titlePanel.setOpaque(false);
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel("Manage Library Members");
-        title.setFont(new Font("SansSerif", Font.BOLD, 25));
-        title.setForeground(white);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "Register, search and manage member accounts"
         );
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        subtitle.setForeground(new Color(239, 222, 211));
+        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setForeground(CREAM);
 
         titlePanel.add(title);
         titlePanel.add(Box.createVerticalStrut(5));
         titlePanel.add(subtitle);
 
-        JButton closeButton = createButton("Close", darkBurgundy, white);
-        closeButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(gold, 1),
-                new EmptyBorder(9, 18, 9, 18)
-        ));
+        JButton closeButton = createButton("Close", DARK_BURGUNDY, WHITE);
         closeButton.addActionListener(e -> dispose());
 
         header.add(titlePanel, BorderLayout.WEST);
@@ -81,14 +79,14 @@ public class ManageMembersFrame extends JFrame {
 
         // MAIN CONTENT
         JPanel centerPanel = new JPanel(new BorderLayout(15, 18));
-        centerPanel.setBackground(cream);
-        centerPanel.setBorder(new EmptyBorder(20, 24, 10, 24));
+        centerPanel.setBackground(CREAM);
+        centerPanel.setBorder(new EmptyBorder(22, 25, 15, 25));
 
         // STATISTICS
         JPanel statisticsPanel = new JPanel(
-                new GridLayout(1, 3, 15, 0)
+                new GridLayout(1, 3, 17, 0)
         );
-        statisticsPanel.setBackground(cream);
+        statisticsPanel.setOpaque(false);
 
         totalLabel = new JLabel("0", SwingConstants.CENTER);
         activeLabel = new JLabel("0", SwingConstants.CENTER);
@@ -104,7 +102,7 @@ public class ManageMembersFrame extends JFrame {
                 createStatCard("INACTIVE MEMBERS", inactiveLabel)
         );
 
-        // TABLE
+        // MEMBER TABLE
         String[] columns = {
                 "Member ID",
                 "Full Name",
@@ -124,30 +122,31 @@ public class ManageMembersFrame extends JFrame {
         };
 
         memberTable = new JTable(tableModel);
-        memberTable.setRowHeight(36);
-        memberTable.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        memberTable.setForeground(textColor);
-        memberTable.setBackground(white);
-        memberTable.setSelectionBackground(new Color(245, 230, 210));
-        memberTable.setSelectionForeground(darkBurgundy);
-        memberTable.setGridColor(new Color(239, 233, 226));
+        memberTable.setRowHeight(40);
+        memberTable.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        memberTable.setForeground(TEXT);
+        memberTable.setBackground(WHITE);
+        memberTable.setSelectionBackground(LIGHT_GOLD);
+        memberTable.setSelectionForeground(BURGUNDY);
+        memberTable.setGridColor(BORDER);
         memberTable.setShowVerticalLines(false);
+        memberTable.setShowHorizontalLines(true);
         memberTable.setIntercellSpacing(new Dimension(0, 1));
         memberTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         memberTable.setAutoCreateRowSorter(true);
         memberTable.setFillsViewportHeight(true);
 
         memberTable.getTableHeader().setFont(
-                new Font("SansSerif", Font.BOLD, 13)
+                new Font("Georgia", Font.BOLD, 11)
         );
-        memberTable.getTableHeader().setBackground(burgundy);
-        memberTable.getTableHeader().setForeground(white);
+        memberTable.getTableHeader().setBackground(BURGUNDY);
+        memberTable.getTableHeader().setForeground(WHITE);
         memberTable.getTableHeader().setPreferredSize(
-                new Dimension(0, 42)
+                new Dimension(0, 45)
         );
         memberTable.getTableHeader().setReorderingAllowed(false);
 
-        // Alternating table rows
+        // TABLE ROW DESIGN
         DefaultTableCellRenderer cellRenderer =
                 new DefaultTableCellRenderer() {
 
@@ -160,27 +159,31 @@ public class ManageMembersFrame extends JFrame {
                             int row,
                             int column
                     ) {
+
                         Component component =
                                 super.getTableCellRendererComponent(
-                                        table, value, isSelected,
-                                        hasFocus, row, column
+                                        table,
+                                        value,
+                                        isSelected,
+                                        hasFocus,
+                                        row,
+                                        column
                                 );
 
+                        setBorder(new EmptyBorder(0, 10, 0, 10));
+
                         if (isSelected) {
-                            component.setBackground(
-                                    new Color(245, 230, 210)
-                            );
-                            component.setForeground(darkBurgundy);
+                            component.setBackground(LIGHT_GOLD);
+                            component.setForeground(BURGUNDY);
                         } else {
                             component.setBackground(
                                     row % 2 == 0
-                                            ? white
-                                            : new Color(250, 248, 245)
+                                            ? WHITE
+                                            : new Color(250, 247, 240)
                             );
-                            component.setForeground(textColor);
+                            component.setForeground(TEXT);
                         }
 
-                        setBorder(new EmptyBorder(0, 10, 0, 10));
                         return component;
                     }
                 };
@@ -192,76 +195,86 @@ public class ManageMembersFrame extends JFrame {
         }
 
         JScrollPane scrollPane = new JScrollPane(memberTable);
-        scrollPane.setBorder(
-                BorderFactory.createLineBorder(borderColor)
-        );
-        scrollPane.getViewport().setBackground(white);
+        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER));
+        scrollPane.getViewport().setBackground(WHITE);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
+        // MEMBER DIRECTORY PANEL
         JPanel tableCard = new JPanel(new BorderLayout(0, 12));
-        tableCard.setBackground(white);
-        tableCard.setBorder(new EmptyBorder(16, 16, 16, 16));
+        tableCard.setBackground(WHITE);
+        tableCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(17, 17, 17, 17)
+        ));
 
         JLabel tableTitle = new JLabel("Member Directory");
-        tableTitle.setFont(new Font("SansSerif", Font.BOLD, 17));
-        tableTitle.setForeground(burgundy);
+        tableTitle.setFont(new Font("Georgia", Font.BOLD, 17));
+        tableTitle.setForeground(BURGUNDY);
 
         JLabel tableSubtitle = new JLabel(
                 "Select a member to view details or manage their account."
         );
-        tableSubtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        tableSubtitle.setForeground(muted);
+        tableSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableSubtitle.setForeground(MUTED);
 
         JPanel tableHeading = new JPanel();
         tableHeading.setOpaque(false);
         tableHeading.setLayout(new BoxLayout(tableHeading, BoxLayout.Y_AXIS));
+
         tableHeading.add(tableTitle);
-        tableHeading.add(Box.createVerticalStrut(4));
+        tableHeading.add(Box.createVerticalStrut(5));
         tableHeading.add(tableSubtitle);
 
         tableCard.add(tableHeading, BorderLayout.NORTH);
         tableCard.add(scrollPane, BorderLayout.CENTER);
 
         JPanel topSection = new JPanel(new BorderLayout(0, 18));
-        topSection.setBackground(cream);
+        topSection.setOpaque(false);
         topSection.add(statisticsPanel, BorderLayout.NORTH);
         topSection.add(tableCard, BorderLayout.CENTER);
 
         centerPanel.add(topSection, BorderLayout.CENTER);
-
         add(centerPanel, BorderLayout.CENTER);
 
         // BOTTOM TOOLBAR
         JPanel bottom = new JPanel(new BorderLayout(15, 10));
-        bottom.setBackground(white);
-        bottom.setBorder(new EmptyBorder(15, 24, 15, 24));
+        bottom.setBackground(WHITE);
+        bottom.setBorder(new EmptyBorder(14, 25, 14, 25));
 
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 3));
-        searchPanel.setBackground(white);
+        JPanel searchPanel = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 8, 3)
+        );
+        searchPanel.setOpaque(false);
 
         JLabel searchLabel = new JLabel("Search Members");
-        searchLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        searchLabel.setForeground(textColor);
+        searchLabel.setFont(new Font("Georgia", Font.BOLD, 12));
+        searchLabel.setForeground(TEXT);
 
         searchField = new JTextField(17);
-        searchField.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        searchField.setPreferredSize(new Dimension(210, 38));
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        searchField.setPreferredSize(new Dimension(210, 39));
+        searchField.setBackground(WHITE);
+        searchField.setForeground(TEXT);
         searchField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderColor),
-                new EmptyBorder(5, 10, 5, 10)
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(6, 10, 6, 10)
         ));
+
         searchField.putClientProperty(
                 "JTextField.placeholderText",
                 "Name, ID, course or email..."
         );
 
         JButton searchButton = createButton(
-                "Search", burgundy, white
+                "Search", BURGUNDY, WHITE
         );
+
         JButton clearButton = createButton(
-                "Clear", new Color(235, 229, 220), textColor
+                "Clear", LIGHT_GOLD, BURGUNDY
         );
+
         JButton refreshButton = createButton(
-                "Refresh", new Color(235, 229, 220), textColor
+                "Refresh", WHITE, BURGUNDY
         );
 
         searchPanel.add(searchLabel);
@@ -273,22 +286,26 @@ public class ManageMembersFrame extends JFrame {
         JPanel actionPanel = new JPanel(
                 new FlowLayout(FlowLayout.RIGHT, 7, 3)
         );
-        actionPanel.setBackground(white);
+        actionPanel.setOpaque(false);
 
         JButton historyButton = createButton(
-                "Borrowing History", new Color(75, 95, 120), white
+                "Borrowing History", DARK_BURGUNDY, WHITE
         );
+
         JButton detailsButton = createButton(
-                "View Details", new Color(235, 229, 220), textColor
+                "View Details", WHITE, BURGUNDY
         );
+
         JButton statusButton = createButton(
-                "Activate / Deactivate", new Color(235, 229, 220), textColor
+                "Activate / Deactivate", LIGHT_GOLD, BURGUNDY
         );
+
         JButton editButton = createButton(
-                "Edit Member", new Color(235, 229, 220), textColor
+                "Edit Member", LIGHT_GOLD, BURGUNDY
         );
+
         JButton addButton = createButton(
-                "+ Register Member", burgundy, white
+                "+ Register Member", BURGUNDY, WHITE
         );
 
         actionPanel.add(historyButton);
@@ -331,43 +348,54 @@ public class ManageMembersFrame extends JFrame {
             Color backgroundColor,
             Color foregroundColor
     ) {
+
         JButton button = new JButton(text);
-        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setBackground(backgroundColor);
         button.setForeground(foregroundColor);
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(new EmptyBorder(10, 13, 10, 13));
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD, 1),
+                new EmptyBorder(9, 13, 9, 13)
+        ));
         button.setOpaque(true);
+
         return button;
     }
 
     // STATISTICS CARD
     private JPanel createStatCard(String heading, JLabel valueLabel) {
 
-        JPanel card = new JPanel(new BorderLayout(5, 10));
-        card.setBackground(white);
+        JPanel card = new JPanel(new BorderLayout(8, 5));
+        card.setBackground(WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderColor),
-                new EmptyBorder(16, 12, 16, 12)
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(16, 17, 16, 17)
         ));
 
-        JLabel headingLabel = new JLabel(
-                heading,
-                SwingConstants.CENTER
-        );
-        headingLabel.setFont(
-                new Font("SansSerif", Font.BOLD, 12)
-        );
-        headingLabel.setForeground(muted);
+        JLabel headingLabel = new JLabel(heading);
+        headingLabel.setFont(new Font("Georgia", Font.BOLD, 11));
+        headingLabel.setForeground(MUTED);
 
-        valueLabel.setFont(
-                new Font("SansSerif", Font.BOLD, 27)
-        );
-        valueLabel.setForeground(burgundy);
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 27));
+        valueLabel.setForeground(BURGUNDY);
 
-        card.add(headingLabel, BorderLayout.NORTH);
-        card.add(valueLabel, BorderLayout.CENTER);
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setOpaque(false);
+
+        textPanel.add(headingLabel);
+        textPanel.add(Box.createVerticalStrut(8));
+        textPanel.add(valueLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        card.add(textPanel, BorderLayout.CENTER);
+        card.add(decoration, BorderLayout.EAST);
 
         return card;
     }
@@ -595,25 +623,37 @@ public class ManageMembersFrame extends JFrame {
         }
 
         JTable historyTable = new JTable(historyModel);
-        historyTable.setRowHeight(32);
-        historyTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        historyTable.setRowHeight(35);
+        historyTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        historyTable.setForeground(TEXT);
+        historyTable.setBackground(WHITE);
+        historyTable.setSelectionBackground(LIGHT_GOLD);
+        historyTable.setSelectionForeground(BURGUNDY);
+        historyTable.setGridColor(BORDER);
+        historyTable.setShowVerticalLines(false);
         historyTable.setAutoCreateRowSorter(true);
         historyTable.setFillsViewportHeight(true);
+
         historyTable.getTableHeader().setFont(
-                new Font("SansSerif", Font.BOLD, 12)
+                new Font("Georgia", Font.BOLD, 11)
         );
-        historyTable.getTableHeader().setBackground(burgundy);
-        historyTable.getTableHeader().setForeground(white);
+        historyTable.getTableHeader().setBackground(BURGUNDY);
+        historyTable.getTableHeader().setForeground(WHITE);
+        historyTable.getTableHeader().setPreferredSize(
+                new Dimension(0, 40)
+        );
 
         JScrollPane scrollPane = new JScrollPane(historyTable);
         scrollPane.setPreferredSize(new Dimension(900, 350));
+        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER));
+        scrollPane.getViewport().setBackground(WHITE);
 
         JLabel memberLabel = new JLabel(
                 "Member: " + member.getFullName() +
                         "  |  Member ID: " + member.getMemberId()
         );
-        memberLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        memberLabel.setForeground(burgundy);
+        memberLabel.setFont(new Font("Georgia", Font.BOLD, 14));
+        memberLabel.setForeground(BURGUNDY);
 
         JLabel summaryLabel = new JLabel(
                 "Total Transactions: " + history.size() +
@@ -621,12 +661,12 @@ public class ManageMembersFrame extends JFrame {
                         "     Returned: " + returnedCount +
                         "     Overdue: " + overdueCount
         );
-        summaryLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        summaryLabel.setForeground(textColor);
+        summaryLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        summaryLabel.setForeground(TEXT);
 
         JPanel panel = new JPanel(new BorderLayout(10, 12));
-        panel.setBackground(cream);
-        panel.setBorder(new EmptyBorder(12, 12, 12, 12));
+        panel.setBackground(CREAM);
+        panel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
         JPanel topPanel = new JPanel(
                 new GridLayout(2, 1, 5, 5)
@@ -767,8 +807,8 @@ public class ManageMembersFrame extends JFrame {
         );
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 12, 12));
-        panel.setBackground(white);
-        panel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        panel.setBackground(WHITE);
+        panel.setBorder(new EmptyBorder(18, 18, 18, 18));
 
         addFormRow(panel, "Full Name:", nameField);
         addFormRow(panel, "Student/Employee ID:", idField);
@@ -892,10 +932,12 @@ public class ManageMembersFrame extends JFrame {
     private JTextField createFormField(String value) {
 
         JTextField field = new JTextField(value);
-        field.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         field.setPreferredSize(new Dimension(230, 36));
+        field.setBackground(WHITE);
+        field.setForeground(TEXT);
         field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderColor),
+                BorderFactory.createLineBorder(BORDER),
                 new EmptyBorder(6, 9, 6, 9)
         ));
 
@@ -907,9 +949,16 @@ public class ManageMembersFrame extends JFrame {
             String labelText,
             JComponent field
     ) {
+
         JLabel label = new JLabel(labelText);
-        label.setFont(new Font("SansSerif", Font.BOLD, 12));
-        label.setForeground(textColor);
+        label.setFont(new Font("Georgia", Font.BOLD, 12));
+        label.setForeground(TEXT);
+
+        if (field instanceof JComboBox<?>) {
+            field.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            field.setBackground(WHITE);
+            field.setForeground(TEXT);
+        }
 
         panel.add(label);
         panel.add(field);

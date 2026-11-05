@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.sql.Connection;
@@ -27,15 +28,18 @@ public class TransactionRecordsFrame extends JFrame {
     private JLabel overdueValue;
     private JLabel returnedValue;
 
-    private static final Color BURGUNDY = new Color(91, 28, 43);
-    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private static final Color GOLD = new Color(205, 164, 82);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 45, 45);
-    private static final Color MUTED = new Color(125, 115, 110);
-    private static final Color GREEN = new Color(43, 125, 82);
-    private static final Color RED = new Color(174, 55, 55);
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
+
+    private static final Color GREEN = new Color(38, 125, 82);
+    private static final Color RED = new Color(175, 55, 55);
     private static final Color BLUE = new Color(60, 105, 155);
 
     public TransactionRecordsFrame() {
@@ -71,8 +75,8 @@ public class TransactionRecordsFrame extends JFrame {
         );
 
         JLabel title = new JLabel("Transaction Records");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 25));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "View and monitor the complete borrowing and return history"
@@ -85,12 +89,12 @@ public class TransactionRecordsFrame extends JFrame {
         titlePanel.add(subtitle);
 
         JButton closeButton = new JButton("CLOSE");
-        styleButton(closeButton, WHITE, BURGUNDY);
+        styleButton(closeButton, BURGUNDY, WHITE);
 
         closeButton.setBorder(
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(GOLD, 1),
-                        BorderFactory.createEmptyBorder(9, 18, 9, 18)
+                        new EmptyBorder(9, 18, 9, 18)
                 )
         );
 
@@ -151,7 +155,7 @@ public class TransactionRecordsFrame extends JFrame {
         toolbar.setOpaque(false);
 
         JLabel sectionTitle = new JLabel("Transaction History");
-        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        sectionTitle.setFont(new Font("Georgia", Font.BOLD, 17));
         sectionTitle.setForeground(BURGUNDY);
 
         JPanel filterPanel = new JPanel(new FlowLayout(
@@ -166,16 +170,17 @@ public class TransactionRecordsFrame extends JFrame {
         searchField = new JTextField(18);
         searchField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         searchField.setPreferredSize(new Dimension(190, 36));
+        searchField.setBackground(WHITE);
+        searchField.setForeground(TEXT);
+        searchField.setCaretColor(BURGUNDY);
         searchField.setToolTipText(
                 "Search member, Student/Employee ID, or book title"
         );
 
         searchField.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(220, 210, 200)
-                        ),
-                        BorderFactory.createEmptyBorder(7, 10, 7, 10)
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(7, 10, 7, 10)
                 )
         );
 
@@ -190,9 +195,7 @@ public class TransactionRecordsFrame extends JFrame {
                 "RETURNED"
         });
 
-        statusFilter.setFont(
-                new Font("Segoe UI", Font.BOLD, 11)
-        );
+        statusFilter.setFont(new Font("Segoe UI", Font.BOLD, 11));
         statusFilter.setPreferredSize(new Dimension(125, 36));
         statusFilter.setBackground(WHITE);
         statusFilter.setForeground(BURGUNDY);
@@ -239,21 +242,15 @@ public class TransactionRecordsFrame extends JFrame {
         styleTable();
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(
-                BorderFactory.createLineBorder(
-                        new Color(225, 215, 205)
-                )
-        );
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(WHITE);
 
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(WHITE);
         tablePanel.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(225, 215, 205)
-                        ),
-                        BorderFactory.createEmptyBorder(8, 8, 8, 8)
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(8, 8, 8, 8)
                 )
         );
 
@@ -284,6 +281,8 @@ public class TransactionRecordsFrame extends JFrame {
                                     )
                             );
                         }
+
+                        updateSummaryCards();
                     }
 
                     @Override
@@ -330,8 +329,8 @@ public class TransactionRecordsFrame extends JFrame {
 
         JButton detailsButton = createButton(
                 "VIEW DETAILS",
-                new Color(100, 90, 85),
-                WHITE
+                WHITE,
+                BURGUNDY
         );
 
         JButton refreshButton = createButton(
@@ -357,7 +356,7 @@ public class TransactionRecordsFrame extends JFrame {
     private JLabel createSummaryValue(Color color) {
 
         JLabel label = new JLabel("0");
-        label.setFont(new Font("Segoe UI", Font.BOLD, 27));
+        label.setFont(new Font("Georgia", Font.BOLD, 27));
         label.setForeground(color);
 
         return label;
@@ -369,32 +368,42 @@ public class TransactionRecordsFrame extends JFrame {
             String description
     ) {
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        JPanel card = new JPanel(new BorderLayout());
         card.setBackground(WHITE);
 
         card.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(230, 220, 210)
-                        ),
-                        BorderFactory.createEmptyBorder(15, 15, 15, 15)
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(14, 15, 14, 15)
                 )
         );
 
+        JPanel textPanel = new JPanel();
+        textPanel.setOpaque(false);
+        textPanel.setLayout(
+                new BoxLayout(textPanel, BoxLayout.Y_AXIS)
+        );
+
         JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        headingLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         headingLabel.setForeground(MUTED);
 
         JLabel descriptionLabel = new JLabel(description);
         descriptionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
         descriptionLabel.setForeground(MUTED);
 
-        card.add(headingLabel);
-        card.add(Box.createVerticalStrut(8));
-        card.add(value);
-        card.add(Box.createVerticalStrut(4));
-        card.add(descriptionLabel);
+        textPanel.add(headingLabel);
+        textPanel.add(Box.createVerticalStrut(8));
+        textPanel.add(value);
+        textPanel.add(Box.createVerticalStrut(4));
+        textPanel.add(descriptionLabel);
+
+        JLabel watermark = new JLabel("L");
+        watermark.setFont(new Font("Georgia", Font.BOLD, 48));
+        watermark.setForeground(new Color(225, 211, 185));
+
+        card.add(textPanel, BorderLayout.CENTER);
+        card.add(watermark, BorderLayout.EAST);
 
         return card;
     }
@@ -417,7 +426,7 @@ public class TransactionRecordsFrame extends JFrame {
             Color foreground
     ) {
 
-        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setBackground(background);
         button.setForeground(foreground);
         button.setFocusPainted(false);
@@ -425,8 +434,12 @@ public class TransactionRecordsFrame extends JFrame {
         button.setCursor(
                 Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         );
+
         button.setBorder(
-                BorderFactory.createEmptyBorder(10, 16, 10, 16)
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(GOLD, 1),
+                        new EmptyBorder(9, 15, 9, 15)
+                )
         );
     }
 
@@ -435,25 +448,22 @@ public class TransactionRecordsFrame extends JFrame {
         table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         table.setForeground(TEXT);
         table.setBackground(WHITE);
-        table.setRowHeight(36);
+        table.setRowHeight(38);
         table.setShowVerticalLines(false);
         table.setShowHorizontalLines(true);
-        table.setGridColor(new Color(240, 235, 230));
+        table.setGridColor(BORDER);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(new Color(245, 231, 207));
+        table.setSelectionBackground(LIGHT_GOLD);
         table.setSelectionForeground(BURGUNDY);
         table.setFillsViewportHeight(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        table.getTableHeader().setFont(
-                new Font("Segoe UI", Font.BOLD, 12)
-        );
-        table.getTableHeader().setBackground(BURGUNDY);
-        table.getTableHeader().setForeground(WHITE);
-        table.getTableHeader().setPreferredSize(
-                new Dimension(0, 40)
-        );
-        table.getTableHeader().setReorderingAllowed(false);
+        JTableHeader header = table.getTableHeader();
+        header.setFont(new Font("Georgia", Font.BOLD, 11));
+        header.setBackground(BURGUNDY);
+        header.setForeground(WHITE);
+        header.setPreferredSize(new Dimension(0, 42));
+        header.setReorderingAllowed(false);
 
         DefaultTableCellRenderer renderer =
                 new DefaultTableCellRenderer() {
@@ -479,15 +489,11 @@ public class TransactionRecordsFrame extends JFrame {
                                 );
 
                         if (isSelected) {
-                            component.setBackground(
-                                    new Color(245, 231, 207)
-                            );
+                            component.setBackground(LIGHT_GOLD);
                             component.setForeground(BURGUNDY);
                         } else {
                             component.setBackground(
-                                    row % 2 == 0
-                                            ? WHITE
-                                            : new Color(250, 248, 244)
+                                    row % 2 == 0 ? WHITE : CREAM
                             );
                             component.setForeground(TEXT);
                         }
@@ -532,15 +538,11 @@ public class TransactionRecordsFrame extends JFrame {
                         String status = String.valueOf(value);
 
                         if (isSelected) {
-                            component.setBackground(
-                                    new Color(245, 231, 207)
-                            );
+                            component.setBackground(LIGHT_GOLD);
                             component.setForeground(BURGUNDY);
                         } else {
                             component.setBackground(
-                                    row % 2 == 0
-                                            ? WHITE
-                                            : new Color(250, 248, 244)
+                                    row % 2 == 0 ? WHITE : CREAM
                             );
 
                             if ("RETURNED".equalsIgnoreCase(status)) {
@@ -553,7 +555,10 @@ public class TransactionRecordsFrame extends JFrame {
                         }
 
                         setHorizontalAlignment(SwingConstants.CENTER);
-                        setFont(new Font("Segoe UI", Font.BOLD, 11));
+                        setFont(new Font("Georgia", Font.BOLD, 10));
+                        setBorder(
+                                BorderFactory.createEmptyBorder(0, 5, 0, 5)
+                        );
 
                         return component;
                     }
@@ -679,15 +684,17 @@ public class TransactionRecordsFrame extends JFrame {
 
     private void updateSummaryCards() {
 
-        int total = tableModel.getRowCount();
+        int total = table.getRowCount();
         int borrowed = 0;
         int overdue = 0;
         int returned = 0;
 
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
+        for (int i = 0; i < table.getRowCount(); i++) {
+
+            int modelRow = table.convertRowIndexToModel(i);
 
             String status = String.valueOf(
-                    tableModel.getValueAt(i, 7)
+                    tableModel.getValueAt(modelRow, 7)
             );
 
             if ("BORROWED".equalsIgnoreCase(status)) {
@@ -740,13 +747,13 @@ public class TransactionRecordsFrame extends JFrame {
 
         detailsPanel.setBackground(WHITE);
         detailsPanel.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+                new EmptyBorder(15, 15, 15, 15)
         );
 
         for (int i = 0; i < labels.length; i++) {
 
             JLabel nameLabel = new JLabel(labels[i] + ":");
-            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            nameLabel.setFont(new Font("Georgia", Font.BOLD, 12));
             nameLabel.setForeground(BURGUNDY);
 
             JLabel valueLabel = new JLabel(

@@ -14,20 +14,25 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 import java.sql.*;
 import java.util.List;
 
 public class ManageBooksFrame extends JFrame {
 
-    private final Color BURGUNDY = new Color(105, 12, 43);
-    private final Color DARK_BURGUNDY = new Color(75, 8, 31);
-    private final Color GOLD = new Color(207, 173, 91);
-    private final Color CREAM = new Color(248, 246, 243);
-    private final Color WHITE = Color.WHITE;
-    private final Color TEXT_DARK = new Color(65, 42, 43);
-    private final Color TEXT_GRAY = new Color(135, 125, 115);
-    private final Color BORDER = new Color(235, 229, 224);
-    private final Color SOFT_GOLD = new Color(250, 244, 231);
+    private final Color BURGUNDY = new Color(75, 20, 36);
+    private final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private final Color GOLD = new Color(176, 141, 87);
+    private final Color CREAM = new Color(243, 235, 221);
+    private final Color WHITE = new Color(255, 252, 245);
+    private final Color TEXT_DARK = new Color(53, 37, 31);
+    private final Color TEXT_GRAY = new Color(130, 115, 103);
+    private final Color BORDER = new Color(222, 210, 191);
+    private final Color SOFT_GOLD = new Color(244, 232, 207);
 
     private JTable bookTable;
     private DefaultTableModel tableModel;
@@ -72,21 +77,21 @@ public class ManageBooksFrame extends JFrame {
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel("Manage Books");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 27));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "Manage your library collection and inventory"
         );
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        subtitle.setForeground(new Color(235, 215, 200));
+        subtitle.setForeground(new Color(243, 235, 221));
 
         titlePanel.add(title);
         titlePanel.add(Box.createVerticalStrut(5));
         titlePanel.add(subtitle);
 
         RoundedButton closeButton = new RoundedButton(
-                "Close", new Color(130, 38, 61), WHITE
+                "Close", new Color(92, 28, 46), WHITE
         );
 
         closeButton.addActionListener(e -> dispose());
@@ -231,6 +236,8 @@ public class ManageBooksFrame extends JFrame {
 
         bookTable = new JTable(tableModel);
         bookTable.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        bookTable.setForeground(TEXT_DARK);
+        bookTable.setBackground(WHITE);
         bookTable.setRowHeight(42);
         bookTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         bookTable.setAutoCreateRowSorter(true);
@@ -238,12 +245,12 @@ public class ManageBooksFrame extends JFrame {
         bookTable.setShowHorizontalLines(true);
         bookTable.setGridColor(BORDER);
         bookTable.setSelectionBackground(SOFT_GOLD);
-        bookTable.setSelectionForeground(DARK_BURGUNDY);
+        bookTable.setSelectionForeground(BURGUNDY);
         bookTable.setIntercellSpacing(new Dimension(0, 1));
         bookTable.setFillsViewportHeight(true);
 
         bookTable.getTableHeader().setFont(
-                new Font("Segoe UI", Font.BOLD, 12)
+                new Font("Georgia", Font.BOLD, 11)
         );
         bookTable.getTableHeader().setBackground(BURGUNDY);
         bookTable.getTableHeader().setForeground(WHITE);
@@ -301,20 +308,23 @@ public class ManageBooksFrame extends JFrame {
         scrollPane.getViewport().setBackground(WHITE);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        RoundedPanel tablePanel = new RoundedPanel(
-                22, WHITE
-        );
-
+        RoundedPanel tablePanel = new RoundedPanel(22, WHITE);
         tablePanel.setLayout(new BorderLayout());
         tablePanel.setBorder(new EmptyBorder(9, 9, 9, 9));
 
+        JLabel tableTitle = new JLabel("BOOK INVENTORY");
+        tableTitle.setFont(new Font("Georgia", Font.BOLD, 17));
+        tableTitle.setForeground(BURGUNDY);
+        tableTitle.setBorder(new EmptyBorder(8, 8, 15, 8));
+
+        tablePanel.add(tableTitle, BorderLayout.NORTH);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
         JLabel tableFooter = new JLabel(
                 "Select a book to edit, view details, or delete."
         );
 
-        tableFooter.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableFooter.setFont(new Font("Georgia", Font.PLAIN, 11));
         tableFooter.setForeground(TEXT_GRAY);
         tableFooter.setBorder(new EmptyBorder(12, 8, 5, 8));
 
@@ -336,16 +346,16 @@ public class ManageBooksFrame extends JFrame {
 
         RoundedPanel card = new RoundedPanel(20, WHITE);
 
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setLayout(new BorderLayout());
         card.setBorder(new EmptyBorder(18, 20, 18, 20));
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         titleLabel.setForeground(TEXT_GRAY);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 29));
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 29));
         valueLabel.setForeground(BURGUNDY);
         valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -356,9 +366,24 @@ public class ManageBooksFrame extends JFrame {
             case 4 -> borrowedValue = valueLabel;
         }
 
-        card.add(titleLabel);
-        card.add(Box.createVerticalStrut(10));
-        card.add(valueLabel);
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setOpaque(false);
+
+        textPanel.add(titleLabel);
+        textPanel.add(Box.createVerticalStrut(10));
+        textPanel.add(valueLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        JPanel cardContent = new JPanel(new BorderLayout());
+        cardContent.setOpaque(false);
+        cardContent.add(textPanel, BorderLayout.CENTER);
+        cardContent.add(decoration, BorderLayout.EAST);
+
+        card.add(cardContent, BorderLayout.CENTER);
 
         return card;
     }
@@ -381,7 +406,7 @@ public class ManageBooksFrame extends JFrame {
             this.normalColor = background;
             this.foregroundColor = foreground;
 
-            setFont(new Font("Segoe UI", Font.BOLD, 12));
+            setFont(new Font("Georgia", Font.BOLD, 11));
             setForeground(foreground);
             setBackground(background);
             setFocusPainted(false);
@@ -422,6 +447,15 @@ public class ManageBooksFrame extends JFrame {
                     15, 15
             );
 
+            g2.setColor(GOLD);
+            g2.setStroke(new BasicStroke(1f));
+            g2.drawRoundRect(
+                    0, 0,
+                    getWidth() - 1,
+                    getHeight() - 1,
+                    15, 15
+            );
+
             g2.dispose();
 
             setForeground(foregroundColor);
@@ -454,17 +488,13 @@ public class ManageBooksFrame extends JFrame {
                     RenderingHints.VALUE_ANTIALIAS_ON
             );
 
-            // Soft shadow
-
-            g2.setColor(new Color(50, 30, 30, 15));
+            g2.setColor(new Color(75, 20, 36, 18));
             g2.fillRoundRect(
                     3, 5,
                     getWidth() - 7,
                     getHeight() - 7,
                     radius, radius
             );
-
-            // Card background
 
             g2.setColor(backgroundColor);
             g2.fillRoundRect(
@@ -473,8 +503,6 @@ public class ManageBooksFrame extends JFrame {
                     getHeight() - 5,
                     radius, radius
             );
-
-            // Subtle border
 
             g2.setColor(BORDER);
             g2.drawRoundRect(
@@ -516,37 +544,232 @@ public class ManageBooksFrame extends JFrame {
 
     // DISPLAY BOOKS AND UPDATE SUMMARY
 
+
+// DISPLAY BOOKS AND UPDATE SUMMARY
+
+    // DISPLAY BOOKS AND UPDATE SUMMARY
     private void displayBooks(List<Book> books) {
 
+        // Clear the existing table rows
         tableModel.setRowCount(0);
 
-        int totalTitles = books.size();
+        int totalTitles = 0;
         int totalCopies = 0;
-        int availableCopies = 0;
+        int totalAvailable = 0;
+        int totalBorrowed = 0;
 
+        // Add each book to the inventory table
         for (Book book : books) {
 
-            totalCopies += book.getTotalCopies();
-            availableCopies += book.getAvailableCopies();
+            int borrowedCopies =
+                    book.getTotalCopies() - book.getAvailableCopies();
 
             tableModel.addRow(new Object[]{
                     book.getBookId(),
-                    valueOrEmpty(book.getIsbn()),
+                    book.getIsbn() == null ? "" : book.getIsbn(),
                     book.getTitle(),
                     book.getAuthor(),
-                    valueOrEmpty(book.getCategory()),
-                    valueOrEmpty(book.getPublisher()),
-                    book.getPublicationYear(),
+                    book.getCategory() == null ? "" : book.getCategory(),
+                    book.getPublisher() == null ? "" : book.getPublisher(),
+                    book.getPublicationYear() == 0
+                            ? ""
+                            : book.getPublicationYear(),
                     book.getTotalCopies(),
                     book.getAvailableCopies(),
-                    valueOrEmpty(book.getShelfLocation())
+                    book.getShelfLocation() == null
+                            ? ""
+                            : book.getShelfLocation()
             });
+
+            totalTitles++;
+            totalCopies += book.getTotalCopies();
+            totalAvailable += book.getAvailableCopies();
+            totalBorrowed += borrowedCopies;
         }
 
+        // Update summary cards
         titlesValue.setText(String.valueOf(totalTitles));
         copiesValue.setText(String.valueOf(totalCopies));
-        availableValue.setText(String.valueOf(availableCopies));
-        borrowedValue.setText(String.valueOf(totalCopies - availableCopies));
+        availableValue.setText(String.valueOf(totalAvailable));
+        borrowedValue.setText(String.valueOf(totalBorrowed));
+
+        // Refresh the table display
+        tableModel.fireTableDataChanged();
+    }
+
+// BOOK COVER IMAGE PICKER
+
+    // BOOK COVER IMAGE PICKER
+
+    private class CoverImagePicker {
+
+        private final JPanel panel;
+        private final JLabel previewLabel;
+        private final JLabel fileNameLabel;
+
+        private String existingImagePath;
+        private File selectedFile;
+
+        CoverImagePicker(String existingImagePath) {
+
+            this.existingImagePath = existingImagePath == null
+                    ? ""
+                    : existingImagePath;
+
+            panel = new JPanel(new BorderLayout(12, 5));
+            panel.setOpaque(false);
+
+            JPanel leftPanel = new JPanel();
+            leftPanel.setOpaque(false);
+            leftPanel.setLayout(
+                    new BoxLayout(leftPanel, BoxLayout.Y_AXIS)
+            );
+
+            RoundedButton chooseButton = new RoundedButton(
+                    "Choose Image", BURGUNDY, WHITE
+            );
+
+            chooseButton.addActionListener(e -> chooseImage());
+
+            fileNameLabel = new JLabel("No image selected");
+            fileNameLabel.setFont(
+                    new Font("Segoe UI", Font.PLAIN, 11)
+            );
+            fileNameLabel.setForeground(TEXT_GRAY);
+
+            leftPanel.add(chooseButton);
+            leftPanel.add(Box.createVerticalStrut(7));
+            leftPanel.add(fileNameLabel);
+
+            previewLabel = new JLabel(
+                    "No Cover",
+                    SwingConstants.CENTER
+            );
+
+            previewLabel.setPreferredSize(new Dimension(100, 130));
+            previewLabel.setOpaque(true);
+            previewLabel.setBackground(new Color(247, 243, 235));
+            previewLabel.setBorder(
+                    BorderFactory.createLineBorder(BORDER)
+            );
+
+            panel.add(leftPanel, BorderLayout.CENTER);
+            panel.add(previewLabel, BorderLayout.EAST);
+
+            if (!this.existingImagePath.isBlank()) {
+
+                File existingFile = new File(this.existingImagePath);
+
+                if (existingFile.exists()) {
+                    displayPreview(existingFile);
+                    fileNameLabel.setText(existingFile.getName());
+                } else {
+                    fileNameLabel.setText("Existing image not found");
+                }
+            }
+        }
+
+        private void chooseImage() {
+
+            JFileChooser chooser = new JFileChooser();
+
+            chooser.setDialogTitle("Select Book Cover Image");
+
+            chooser.setFileFilter(
+                    new FileNameExtensionFilter(
+                            "Image Files (*.jpg, *.jpeg, *.png)",
+                            "jpg", "jpeg", "png"
+                    )
+            );
+
+            chooser.setAcceptAllFileFilterUsed(false);
+
+            int result = chooser.showOpenDialog(ManageBooksFrame.this);
+
+            if (result == JFileChooser.APPROVE_OPTION) {
+
+                File file = chooser.getSelectedFile();
+
+                if (displayPreview(file)) {
+                    selectedFile = file;
+                    fileNameLabel.setText(file.getName());
+                }
+            }
+        }
+
+        private boolean displayPreview(File file) {
+
+            try {
+
+                BufferedImage image = ImageIO.read(file);
+
+                if (image == null) {
+                    throw new IllegalArgumentException(
+                            "Invalid image file."
+                    );
+                }
+
+                Image scaledImage = image.getScaledInstance(
+                        100,
+                        130,
+                        Image.SCALE_SMOOTH
+                );
+
+                previewLabel.setIcon(new ImageIcon(scaledImage));
+                previewLabel.setText("");
+
+                return true;
+
+            } catch (Exception e) {
+
+                previewLabel.setIcon(null);
+                previewLabel.setText("Preview unavailable");
+
+                showWarning(
+                        "The selected file is not a valid image.",
+                        "Image Error"
+                );
+
+                return false;
+            }
+        }
+
+        JPanel getPanel() {
+            return panel;
+        }
+
+        String saveImage() throws java.io.IOException {
+
+            if (selectedFile == null) {
+                return existingImagePath;
+            }
+
+            String fileName = selectedFile.getName();
+
+            String extension = fileName.substring(
+                    fileName.lastIndexOf(".")
+            ).toLowerCase();
+
+            Path directory = Path.of(
+                    System.getProperty("user.home"),
+                    "LibraryLink",
+                    "book_covers"
+            );
+
+            Files.createDirectories(directory);
+
+            String uniqueName = UUID.randomUUID() + extension;
+
+            Path destination = directory.resolve(uniqueName);
+
+            Files.copy(
+                    selectedFile.toPath(),
+                    destination,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            return destination.toAbsolutePath().toString();
+        }
     }
 
     // ADD BOOK
@@ -561,7 +784,7 @@ public class ManageBooksFrame extends JFrame {
         JTextField yearField = createFormField();
         JTextField copiesField = createFormField();
         JTextField shelfField = createFormField();
-
+        CoverImagePicker coverPicker = new CoverImagePicker("");
         JPanel form = createFormPanel();
 
         addFormRow(form, "ISBN", isbnField);
@@ -572,7 +795,7 @@ public class ManageBooksFrame extends JFrame {
         addFormRow(form, "Publication Year", yearField);
         addFormRow(form, "Total Copies *", copiesField);
         addFormRow(form, "Shelf Location", shelfField);
-
+        addFormRow(form, "Book Cover", coverPicker.getPanel());
         if (showFormDialog(form, "Add New Book") != JOptionPane.OK_OPTION) {
             return;
         }
@@ -613,11 +836,32 @@ public class ManageBooksFrame extends JFrame {
             );
 
             if (BookService.addBook(book)) {
+
+                String coverPath = coverPicker.saveImage();
+
+                if (!coverPath.isBlank()) {
+
+                    int newBookId = findNewBookId(book);
+
+                    if (newBookId > 0) {
+                        updateOptionalBookDetails(
+                                newBookId,
+                                coverPath,
+                                ""
+                        );
+                    }
+                }
+
                 showSuccess("Book added successfully!");
                 searchField.setText("");
                 loadBooks();
+
             } else {
-                showWarning("The book could not be added.", "Add Book Failed");
+
+                showWarning(
+                        "The book could not be added.",
+                        "Add Book Failed"
+                );
             }
 
         } catch (NumberFormatException e) {
@@ -632,9 +876,49 @@ public class ManageBooksFrame extends JFrame {
                     "Unable to add book. Check whether its ISBN already exists.",
                     e
             );
+        } catch (java.io.IOException e) {
+            showError(
+                    "The book was added, but the cover image could not be saved.",
+                    e
+            );
         }
     }
+// FIND NEWLY ADDED BOOK ID
 
+    private int findNewBookId(Book book) throws SQLException {
+
+        String sql = """
+            SELECT book_id
+            FROM books
+            WHERE title = ?
+              AND author = ?
+              AND (
+                    isbn = ?
+                    OR (isbn IS NULL AND ? IS NULL)
+              )
+            ORDER BY book_id DESC
+            LIMIT 1
+            """;
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, book.getTitle());
+            statement.setString(2, book.getAuthor());
+            statement.setString(3, book.getIsbn());
+            statement.setString(4, book.getIsbn());
+
+            try (ResultSet rs = statement.executeQuery()) {
+
+                if (rs.next()) {
+                    return rs.getInt("book_id");
+                }
+            }
+        }
+
+        return -1;
+    }
     // EDIT BOOK
 
     private void editSelectedBook() {
@@ -688,7 +972,7 @@ public class ManageBooksFrame extends JFrame {
                 "Currently borrowed copies: " + borrowedCopies
         );
         borrowedInfo.setForeground(BURGUNDY);
-        borrowedInfo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        borrowedInfo.setFont(new Font("Georgia", Font.BOLD, 12));
 
         form.add(new JLabel("Inventory Note"));
         form.add(borrowedInfo);
@@ -808,8 +1092,8 @@ public class ManageBooksFrame extends JFrame {
             header.setBorder(new EmptyBorder(20, 28, 20, 28));
 
             JLabel headerTitle = new JLabel("BOOK DETAILS");
-            headerTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-            headerTitle.setForeground(WHITE);
+            headerTitle.setFont(new Font("Georgia", Font.BOLD, 22));
+            headerTitle.setForeground(GOLD);
 
             RoundedButton closeX = new RoundedButton(
                     "X", BURGUNDY, WHITE
@@ -830,7 +1114,7 @@ public class ManageBooksFrame extends JFrame {
             RoundedPanel coverPanel = new RoundedPanel(18, WHITE);
             coverPanel.setLayout(new BorderLayout());
             coverPanel.setBorder(new EmptyBorder(12, 12, 12, 12));
-            coverPanel.setPreferredSize(new Dimension(270, 350));
+            coverPanel.setPreferredSize(new Dimension(270, 330));
 
             coverPanel.add(
                     createCoverLabel(extra.coverImage),
@@ -846,7 +1130,7 @@ public class ManageBooksFrame extends JFrame {
             );
 
             JLabel bookTitle = new JLabel(title);
-            bookTitle.setFont(new Font("Segoe UI", Font.BOLD, 23));
+            bookTitle.setFont(new Font("Georgia", Font.BOLD, 23));
             bookTitle.setForeground(BURGUNDY);
             bookTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -878,7 +1162,7 @@ public class ManageBooksFrame extends JFrame {
             );
 
             JLabel descriptionTitle = new JLabel("DESCRIPTION");
-            descriptionTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            descriptionTitle.setFont(new Font("Georgia", Font.BOLD, 14));
             descriptionTitle.setForeground(BURGUNDY);
 
             JTextArea descriptionArea = new JTextArea(
@@ -1005,7 +1289,8 @@ public class ManageBooksFrame extends JFrame {
             JTextField yearField = createFormField(year);
             JTextField totalField = createFormField(total);
             JTextField shelfField = createFormField(shelf);
-            JTextField coverField = createFormField(extra.coverImage);
+            CoverImagePicker coverPicker =
+                    new CoverImagePicker(extra.coverImage);
 
             JTextArea descriptionField = new JTextArea(
                     extra.description, 5, 25
@@ -1030,7 +1315,7 @@ public class ManageBooksFrame extends JFrame {
             addFormRow(form, "Year Published", yearField);
             addFormRow(form, "Total Copies *", totalField);
             addFormRow(form, "Shelf Location", shelfField);
-            addFormRow(form, "Cover Image Path / URL", coverField);
+            addFormRow(form, "Book Cover", coverPicker.getPanel());
 
             form.add(createFormLabel("Description"));
             form.add(new JScrollPane(descriptionField));
@@ -1094,9 +1379,11 @@ public class ManageBooksFrame extends JFrame {
                 return;
             }
 
+            String updatedCoverPath = coverPicker.saveImage();
+
             updateOptionalBookDetails(
                     bookId,
-                    coverField.getText().trim(),
+                    updatedCoverPath,
                     descriptionField.getText().trim()
             );
 
@@ -1112,6 +1399,11 @@ public class ManageBooksFrame extends JFrame {
             showWarning(e.getMessage(), "Invalid Input");
         } catch (SQLException e) {
             showError("Unable to update book details.", e);
+        } catch (java.io.IOException e) {
+            showError(
+                    "The book details were updated, but the cover image could not be saved.",
+                    e
+            );
         }
     }
 
@@ -1297,12 +1589,13 @@ public class ManageBooksFrame extends JFrame {
 
     // DISPLAY COVER IMAGE
 
+    // DISPLAY COVER IMAGE - RESPONSIVE SCALING
     private JLabel createCoverLabel(String imagePath) {
 
         JLabel label = new JLabel();
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
-        label.setPreferredSize(new Dimension(240, 320));
+        label.setPreferredSize(new Dimension(240, 300));
         label.setOpaque(true);
         label.setBackground(new Color(247, 243, 235));
 
@@ -1314,17 +1607,55 @@ public class ManageBooksFrame extends JFrame {
 
                 if (imagePath.startsWith("http://")
                         || imagePath.startsWith("https://")) {
+
                     image = ImageIO.read(new URL(imagePath));
+
                 } else {
+
                     image = ImageIO.read(new File(imagePath));
                 }
 
                 if (image != null) {
-                    Image scaled = image.getScaledInstance(
-                            240, 320, Image.SCALE_SMOOTH
-                    );
 
-                    label.setIcon(new ImageIcon(scaled));
+                    // Resize the image whenever the label changes size
+                    label.addComponentListener(
+                            new java.awt.event.ComponentAdapter() {
+
+                                @Override
+                                public void componentResized(
+                                        java.awt.event.ComponentEvent e) {
+
+                                    int availableWidth = label.getWidth() - 10;
+                                    int availableHeight = label.getHeight() - 10;
+
+                                    if (availableWidth <= 0 || availableHeight <= 0) {
+                                        return;
+                                    }
+
+                                    double widthRatio =
+                                            (double) availableWidth / image.getWidth();
+
+                                    double heightRatio =
+                                            (double) availableHeight / image.getHeight();
+
+                                    double scale = Math.min(
+                                            widthRatio,
+                                            heightRatio
+                                    );
+
+                                    int newWidth = (int) (image.getWidth() * scale);
+                                    int newHeight = (int) (image.getHeight() * scale);
+
+                                    Image scaledImage = image.getScaledInstance(
+                                            newWidth,
+                                            newHeight,
+                                            Image.SCALE_SMOOTH
+                                    );
+
+                                    label.setIcon(new ImageIcon(scaledImage));
+                                }
+                            });
+
                     return label;
                 }
 
@@ -1364,7 +1695,7 @@ public class ManageBooksFrame extends JFrame {
         line.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel nameLabel = new JLabel(label + ":");
-        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        nameLabel.setFont(new Font("Georgia", Font.BOLD, 12));
         nameLabel.setForeground(TEXT_GRAY);
         nameLabel.setPreferredSize(new Dimension(145, 25));
 
@@ -1483,7 +1814,21 @@ public class ManageBooksFrame extends JFrame {
     }
 
     private JTextField createFormField() {
-        return createFormField("");
+        JTextField field = new JTextField();
+
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        field.setPreferredSize(new Dimension(180, 32));
+        field.setMinimumSize(new Dimension(150, 32));
+
+        field.setBackground(WHITE);
+        field.setForeground(TEXT_DARK);
+        field.setCaretColor(BURGUNDY);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(5, 8, 5, 8)
+        ));
+
+        return field;
     }
 
     private JTextField createFormField(String value) {
@@ -1497,7 +1842,7 @@ public class ManageBooksFrame extends JFrame {
 
         field.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(BORDER),
+                        BorderFactory.createLineBorder(GOLD),
                         new EmptyBorder(7, 10, 7, 10)
                 )
         );
@@ -1508,7 +1853,7 @@ public class ManageBooksFrame extends JFrame {
     private JLabel createFormLabel(String text) {
 
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setFont(new Font("Georgia", Font.BOLD, 12));
         label.setForeground(TEXT_DARK);
 
         return label;
@@ -1526,9 +1871,18 @@ public class ManageBooksFrame extends JFrame {
 
     private int showFormDialog(JPanel form, String title) {
 
+        JScrollPane scrollPane = new JScrollPane(form);
+
+        scrollPane.setBorder(null);
+        scrollPane.setPreferredSize(new Dimension(650, 550));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        );
+
         return JOptionPane.showConfirmDialog(
                 this,
-                form,
+                scrollPane,
                 title,
                 JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.PLAIN_MESSAGE

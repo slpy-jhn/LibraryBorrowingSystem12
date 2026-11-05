@@ -13,13 +13,15 @@ import java.sql.SQLException;
 
 public class MyAccountFrame extends JFrame {
 
-    private static final Color BURGUNDY = new Color(92, 20, 38);
-    private static final Color GOLD = new Color(205, 166, 82);
-    private static final Color CREAM = new Color(248, 245, 238);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 48, 48);
-    private static final Color MUTED = new Color(125, 116, 112);
-    private static final Color BORDER = new Color(229, 222, 211);
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     private final int memberId;
 
@@ -62,8 +64,8 @@ public class MyAccountFrame extends JFrame {
         titlePanel.setOpaque(false);
 
         JLabel titleLabel = new JLabel("My Account");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 27));
-        titleLabel.setForeground(WHITE);
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 27));
+        titleLabel.setForeground(GOLD);
 
         JLabel subtitleLabel = new JLabel(
                 "View your registered library membership information"
@@ -102,7 +104,7 @@ public class MyAccountFrame extends JFrame {
         ));
 
         JLabel sectionTitle = new JLabel("Membership Information");
-        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 19));
+        sectionTitle.setFont(new Font("Georgia", Font.BOLD, 19));
         sectionTitle.setForeground(BURGUNDY);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -159,7 +161,17 @@ public class MyAccountFrame extends JFrame {
         gbc.insets = new Insets(0, 10, 18, 10);
         informationPanel.add(sectionTitle, gbc);
 
-        outerPanel.add(informationPanel, BorderLayout.NORTH);
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        JPanel panelContent = new JPanel(new BorderLayout());
+        panelContent.setOpaque(false);
+
+        panelContent.add(informationPanel, BorderLayout.CENTER);
+        panelContent.add(decoration, BorderLayout.EAST);
+
+        outerPanel.add(panelContent, BorderLayout.NORTH);
 
         add(outerPanel, BorderLayout.CENTER);
     }
@@ -173,7 +185,7 @@ public class MyAccountFrame extends JFrame {
         JLabel footerLabel = new JLabel(
                 "LibraryLink  |  Student Membership Profile"
         );
-        footerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        footerLabel.setFont(new Font("Georgia", Font.PLAIN, 11));
         footerLabel.setForeground(MUTED);
 
         JButton refreshButton = createButton(
@@ -192,8 +204,8 @@ public class MyAccountFrame extends JFrame {
 
         JLabel label = new JLabel("-");
 
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        label.setForeground(TEXT);
+        label.setFont(new Font("Georgia", Font.BOLD, 12));
+        label.setForeground(MUTED);
 
         return label;
     }
@@ -231,12 +243,15 @@ public class MyAccountFrame extends JFrame {
 
         JButton button = new JButton(text);
 
-        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setForeground(foreground);
         button.setBackground(background);
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(new EmptyBorder(10, 18, 10, 18));
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD, 1),
+                new EmptyBorder(10, 18, 10, 18)
+        ));
         button.setOpaque(true);
 
         return button;

@@ -15,17 +15,18 @@ import java.util.List;
 
 public class MyReturnRequestsFrame extends JFrame {
 
-    private static final Color BURGUNDY = new Color(91, 28, 43);
-    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private static final Color GOLD = new Color(205, 164, 82);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 45, 45);
-    private static final Color MUTED = new Color(125, 115, 110);
-    private static final Color BORDER = new Color(229, 222, 211);
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
     private static final Color GREEN = new Color(38, 125, 82);
     private static final Color RED = new Color(175, 55, 55);
     private static final Color ORANGE = new Color(190, 125, 35);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     private final UserSession session;
 
@@ -74,8 +75,8 @@ public class MyReturnRequestsFrame extends JFrame {
         titlePanel.setOpaque(false);
 
         JLabel title = new JLabel("My Return Requests");
-        title.setFont(new Font("Serif", Font.BOLD, 27));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "Track your submitted return requests and their approval status."
@@ -88,7 +89,7 @@ public class MyReturnRequestsFrame extends JFrame {
         titlePanel.add(subtitle);
 
         JLabel logo = new JLabel("LIBRARYLINK");
-        logo.setFont(new Font("Serif", Font.BOLD, 18));
+        logo.setFont(new Font("Georgia", Font.BOLD, 18));
         logo.setForeground(GOLD);
 
         JButton closeButton = createButton("CLOSE", DARK_BURGUNDY, WHITE);
@@ -176,7 +177,7 @@ public class MyReturnRequestsFrame extends JFrame {
         requestTable.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION
         );
-        requestTable.setSelectionBackground(new Color(245, 231, 205));
+        requestTable.setSelectionBackground(LIGHT_GOLD);
         requestTable.setSelectionForeground(TEXT);
         requestTable.setGridColor(new Color(235, 228, 218));
         requestTable.setShowVerticalLines(false);
@@ -185,7 +186,7 @@ public class MyReturnRequestsFrame extends JFrame {
         requestTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         JTableHeader tableHeader = requestTable.getTableHeader();
-        tableHeader.setFont(new Font("SansSerif", Font.BOLD, 12));
+        tableHeader.setFont(new Font("Georgia", Font.BOLD, 11));
         tableHeader.setBackground(BURGUNDY);
         tableHeader.setForeground(WHITE);
         tableHeader.setPreferredSize(new Dimension(0, 44));
@@ -245,7 +246,7 @@ public class MyReturnRequestsFrame extends JFrame {
         tableHeading.setOpaque(false);
 
         JLabel tableTitle = new JLabel("Return Request Records");
-        tableTitle.setFont(new Font("SansSerif", Font.BOLD, 17));
+        tableTitle.setFont(new Font("Georgia", Font.BOLD, 17));
         tableTitle.setForeground(BURGUNDY);
 
         resultLabel = new JLabel("Your submitted requests");
@@ -315,15 +316,31 @@ public class MyReturnRequestsFrame extends JFrame {
         ));
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         titleLabel.setForeground(MUTED);
 
-        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 27));
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 27));
         valueLabel.setForeground(accent);
 
-        card.add(titleLabel);
-        card.add(Box.createVerticalStrut(8));
-        card.add(valueLabel);
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setOpaque(false);
+
+        textPanel.add(titleLabel);
+        textPanel.add(Box.createVerticalStrut(8));
+        textPanel.add(valueLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        JPanel cardContent = new JPanel(new BorderLayout());
+        cardContent.setOpaque(false);
+        cardContent.add(textPanel, BorderLayout.CENTER);
+        cardContent.add(decoration, BorderLayout.EAST);
+
+        card.setLayout(new BorderLayout());
+        card.add(cardContent, BorderLayout.CENTER);
 
         return card;
     }
@@ -335,12 +352,15 @@ public class MyReturnRequestsFrame extends JFrame {
     ) {
 
         JButton button = new JButton(text);
-        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setForeground(foreground);
         button.setBackground(background);
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(new EmptyBorder(11, 18, 11, 18));
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD, 1),
+                new EmptyBorder(10, 18, 10, 18)
+        ));
         button.setOpaque(true);
 
         return button;
