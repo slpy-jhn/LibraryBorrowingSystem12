@@ -15,15 +15,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class MyBorrowingHistoryFrame extends JFrame {
-
-    private static final Color BURGUNDY = new Color(92, 20, 38);
-    private static final Color DARK_BURGUNDY = new Color(65, 13, 27);
-    private static final Color GOLD = new Color(205, 166, 82);
-    private static final Color CREAM = new Color(248, 245, 238);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 48, 48);
-    private static final Color MUTED = new Color(125, 116, 112);
-    private static final Color BORDER = new Color(229, 222, 211);
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -56,8 +56,8 @@ public class MyBorrowingHistoryFrame extends JFrame {
         titlePanel.setOpaque(false);
 
         JLabel titleLabel = new JLabel("My Borrowing History");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 27));
-        titleLabel.setForeground(WHITE);
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 27));
+        titleLabel.setForeground(GOLD);
 
         JLabel subtitleLabel = new JLabel(
                 "Review your previous and current book transactions"
@@ -132,7 +132,7 @@ public class MyBorrowingHistoryFrame extends JFrame {
         table.setForeground(TEXT);
         table.setBackground(WHITE);
         table.setRowHeight(38);
-        table.setSelectionBackground(new Color(241, 229, 205));
+        table.setSelectionBackground(LIGHT_GOLD);
         table.setSelectionForeground(BURGUNDY);
         table.setGridColor(new Color(239, 234, 226));
         table.setShowVerticalLines(false);
@@ -141,7 +141,7 @@ public class MyBorrowingHistoryFrame extends JFrame {
         table.setAutoCreateRowSorter(true);
 
         JTableHeader tableHeader = table.getTableHeader();
-        tableHeader.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tableHeader.setFont(new Font("Georgia", Font.BOLD, 11));
         tableHeader.setBackground(BURGUNDY);
         tableHeader.setForeground(WHITE);
         tableHeader.setPreferredSize(new Dimension(0, 42));
@@ -170,7 +170,7 @@ public class MyBorrowingHistoryFrame extends JFrame {
         tablePanel.setBackground(CREAM);
 
         JLabel tableTitle = new JLabel("Transaction Records");
-        tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        tableTitle.setFont(new Font("Georgia", Font.BOLD, 17));
         tableTitle.setForeground(BURGUNDY);
 
         tablePanel.add(tableTitle, BorderLayout.NORTH);
@@ -222,9 +222,25 @@ public class MyBorrowingHistoryFrame extends JFrame {
         valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 27));
         valueLabel.setForeground(BURGUNDY);
 
-        card.add(titleLabel);
-        card.add(Box.createVerticalStrut(8));
-        card.add(valueLabel);
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setOpaque(false);
+
+        textPanel.add(titleLabel);
+        textPanel.add(Box.createVerticalStrut(8));
+        textPanel.add(valueLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        JPanel cardContent = new JPanel(new BorderLayout());
+        cardContent.setOpaque(false);
+        cardContent.add(textPanel, BorderLayout.CENTER);
+        cardContent.add(decoration, BorderLayout.EAST);
+
+        card.setLayout(new BorderLayout());
+        card.add(cardContent, BorderLayout.CENTER);
 
         return card;
     }

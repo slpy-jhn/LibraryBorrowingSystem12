@@ -14,17 +14,17 @@ public class AdminDashboard extends JFrame {
     // MODERN LIGHT THEME
     // ==========================================
 
-    private final Color PRIMARY = new Color(105, 12, 43);
-    private final Color PRIMARY_DARK = new Color(75, 8, 31);
-    private final Color GOLD = new Color(190, 151, 75);
+    private final Color PRIMARY = new Color(75, 20, 36);
+    private final Color PRIMARY_DARK = new Color(55, 13, 27);
+    private final Color GOLD = new Color(176, 141, 87);
 
-    private final Color BACKGROUND = new Color(246, 247, 250);
-    private final Color WHITE = Color.WHITE;
-    private final Color CARD_BACKGROUND = new Color(255, 255, 255);
+    private final Color BACKGROUND = new Color(243, 235, 221);
+    private final Color WHITE = new Color(255, 252, 245);
+    private final Color CARD_BACKGROUND = new Color(255, 252, 245);
 
-    private final Color DARK_TEXT = new Color(48, 48, 58);
-    private final Color MUTED = new Color(135, 137, 148);
-    private final Color SOFT_BORDER = new Color(235, 237, 242);
+    private final Color DARK_TEXT = new Color(53, 37, 31);
+    private final Color MUTED = new Color(130, 115, 103);
+    private final Color SOFT_BORDER = new Color(222, 210, 191);
 
     private final UserSession session;
 
@@ -64,12 +64,12 @@ public class AdminDashboard extends JFrame {
     private JPanel createSidebar() {
 
         JPanel sidebar = new JPanel(new BorderLayout());
-        sidebar.setBackground(WHITE);
+        sidebar.setBackground(PRIMARY);
         sidebar.setPreferredSize(new Dimension(245, 0));
 
         sidebar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(
-                        0, 0, 0, 1, SOFT_BORDER
+                        0, 0, 1, 0, GOLD
                 ),
                 new EmptyBorder(25, 15, 20, 15)
         ));
@@ -81,17 +81,18 @@ public class AdminDashboard extends JFrame {
         brandPanel.setLayout(new BoxLayout(brandPanel, BoxLayout.Y_AXIS));
 
         JLabel logo = new JLabel("L");
-        logo.setFont(new Font("Georgia", Font.BOLD, 42));
-        logo.setForeground(PRIMARY);
+        logo.setFont(new Font("Georgia", Font.BOLD, 48));
+        logo.setForeground(new Color(205, 170, 105));
+        logo.setOpaque(false);
         logo.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel title = new JLabel("LibraryLink");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 23));
-        title.setForeground(DARK_TEXT);
+        title.setFont(new Font("Georgia", Font.BOLD, 23));
+        title.setForeground(WHITE);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel subtitle = new JLabel("ADMINISTRATION");
-        subtitle.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        subtitle.setFont(new Font("Georgia", Font.BOLD, 10));
         subtitle.setForeground(GOLD);
         subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -194,7 +195,7 @@ public class AdminDashboard extends JFrame {
 
                     @Override
                     protected void configureScrollBarColors() {
-                        thumbColor = new Color(210, 195, 200);
+                        thumbColor = new Color(210, 190, 165);
                         trackColor = WHITE;
                     }
 
@@ -279,8 +280,8 @@ public class AdminDashboard extends JFrame {
         headingPanel.setLayout(new BoxLayout(headingPanel, BoxLayout.Y_AXIS));
 
         JLabel heading = new JLabel("Dashboard");
-        heading.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        heading.setForeground(DARK_TEXT);
+        heading.setFont(new Font("Georgia", Font.BOLD, 30));
+        heading.setForeground(PRIMARY);
 
         JLabel welcome = new JLabel(
                 "Welcome back, " + username + "! Here's your library overview."
@@ -303,7 +304,7 @@ public class AdminDashboard extends JFrame {
         badgeLogo.setForeground(GOLD);
 
         JLabel badgeText = new JLabel("ADMIN");
-        badgeText.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        badgeText.setFont(new Font("Georgia", Font.BOLD, 12));
         badgeText.setForeground(PRIMARY);
 
         adminBadge.add(badgeLogo);
@@ -352,8 +353,8 @@ public class AdminDashboard extends JFrame {
         bottomPanel.setBorder(new EmptyBorder(22, 25, 22, 25));
 
         JLabel recentTitle = new JLabel("Recent Transactions");
-        recentTitle.setFont(new Font("Segoe UI", Font.BOLD, 19));
-        recentTitle.setForeground(DARK_TEXT);
+        recentTitle.setFont(new Font("Georgia", Font.BOLD, 18));
+        recentTitle.setForeground(PRIMARY);
 
         JLabel placeholder = new JLabel(
                 "Transaction records will appear here."
@@ -400,12 +401,12 @@ public class AdminDashboard extends JFrame {
         numberLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 12));
         titleLabel.setForeground(MUTED);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 38));
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 38));
         valueLabel.setForeground(PRIMARY);
         valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -459,7 +460,7 @@ public class AdminDashboard extends JFrame {
 
             // Soft shadow
 
-            g2.setColor(new Color(40, 45, 60, 17));
+            g2.setColor(new Color(75, 20, 36, 18));
             g2.fillRoundRect(
                     3, 5,
                     getWidth() - 7,
@@ -505,8 +506,8 @@ public class AdminDashboard extends JFrame {
 
             super(text);
 
-            setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            setForeground(DARK_TEXT);
+            setFont(new Font("Georgia", Font.BOLD, 12));
+            setForeground(new Color(243, 235, 221));
             setHorizontalAlignment(SwingConstants.LEFT);
 
             setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
@@ -524,7 +525,7 @@ public class AdminDashboard extends JFrame {
 
         void setLogoutStyle(boolean value) {
             logoutStyle = value;
-            setFont(new Font("Segoe UI", Font.BOLD, 13));
+            setFont(new Font("Georgia", Font.BOLD, 12));
         }
 
         @Override
@@ -538,16 +539,16 @@ public class AdminDashboard extends JFrame {
             );
 
             if (logoutStyle) {
-                g2.setColor(new Color(250, 239, 242));
+                g2.setColor(new Color(55, 13, 27));
 
             } else if (getModel().isPressed()) {
-                g2.setColor(new Color(242, 232, 236));
+                g2.setColor(new Color(105, 35, 53));
 
             } else if (getModel().isRollover()) {
-                g2.setColor(new Color(248, 242, 245));
+                g2.setColor(new Color(92, 28, 46));
 
             } else {
-                g2.setColor(WHITE);
+                g2.setColor(PRIMARY);
             }
 
             g2.fillRoundRect(
@@ -558,13 +559,13 @@ public class AdminDashboard extends JFrame {
             );
 
             if (logoutStyle) {
-                setForeground(PRIMARY);
+                setForeground(GOLD);
 
             } else if (getModel().isRollover() || getModel().isPressed()) {
-                setForeground(PRIMARY);
+                setForeground(GOLD);
 
             } else {
-                setForeground(DARK_TEXT);
+                setForeground(new Color(243, 235, 221));
             }
 
             if (getModel().isRollover() || logoutStyle) {

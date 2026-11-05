@@ -1,4 +1,3 @@
-
 package com.library.ui;
 
 import com.library.database.DatabaseConnection;
@@ -16,14 +15,16 @@ import java.util.Arrays;
 
 public class ManageStudentAccountsFrame extends JFrame {
 
-    private static final Color BURGUNDY = new Color(91, 28, 43);
-    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private static final Color GOLD = new Color(205, 164, 82);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 45, 45);
-    private static final Color MUTED = new Color(125, 115, 110);
-    private static final Color BORDER = new Color(229, 222, 211);
+    // LIBRARYLINK THEME
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
 
     private JComboBox<MemberItem> memberComboBox;
     private JTextField createUsernameField;
@@ -41,8 +42,8 @@ public class ManageStudentAccountsFrame extends JFrame {
     public ManageStudentAccountsFrame() {
 
         setTitle("LibraryLink - Manage Student Accounts");
-        setSize(1050, 720);
-        setMinimumSize(new Dimension(850, 620));
+        setSize(1050, 760);
+        setMinimumSize(new Dimension(850, 700));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -57,6 +58,8 @@ public class ManageStudentAccountsFrame extends JFrame {
         loadStudentAccounts();
     }
 
+    // HEADER
+
     private void createHeader() {
 
         JPanel header = new JPanel(new BorderLayout());
@@ -68,13 +71,13 @@ public class ManageStudentAccountsFrame extends JFrame {
         titlePanel.setOpaque(false);
 
         JLabel titleLabel = new JLabel("Manage Student Accounts");
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 27));
-        titleLabel.setForeground(WHITE);
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 27));
+        titleLabel.setForeground(GOLD);
 
         JLabel subtitleLabel = new JLabel(
                 "Create student login accounts and update existing credentials."
         );
-        subtitleLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         subtitleLabel.setForeground(new Color(240, 225, 220));
 
         titlePanel.add(titleLabel);
@@ -82,7 +85,7 @@ public class ManageStudentAccountsFrame extends JFrame {
         titlePanel.add(subtitleLabel);
 
         JLabel logo = new JLabel("LIBRARYLINK");
-        logo.setFont(new Font("Serif", Font.BOLD, 18));
+        logo.setFont(new Font("Georgia", Font.BOLD, 18));
         logo.setForeground(GOLD);
 
         header.add(titlePanel, BorderLayout.WEST);
@@ -91,11 +94,15 @@ public class ManageStudentAccountsFrame extends JFrame {
         add(header, BorderLayout.NORTH);
     }
 
+    // MAIN CONTENT
+
     private void createMainContent() {
 
         JPanel content = new JPanel(new BorderLayout(0, 18));
         content.setBackground(CREAM);
         content.setBorder(new EmptyBorder(22, 25, 20, 25));
+
+        // SUMMARY CARDS
 
         JPanel summaryPanel = new JPanel(new GridLayout(1, 2, 15, 0));
         summaryPanel.setOpaque(false);
@@ -104,19 +111,27 @@ public class ManageStudentAccountsFrame extends JFrame {
         accountCountLabel = new JLabel("0");
 
         summaryPanel.add(createSummaryCard(
-                "ELIGIBLE MEMBERS", memberCountLabel, GOLD
+                "ELIGIBLE MEMBERS",
+                memberCountLabel,
+                GOLD
         ));
 
         summaryPanel.add(createSummaryCard(
-                "STUDENT ACCOUNTS", accountCountLabel, BURGUNDY
+                "STUDENT ACCOUNTS",
+                accountCountLabel,
+                BURGUNDY
         ));
 
         content.add(summaryPanel, BorderLayout.NORTH);
 
+        // TABS
+
         JTabbedPane tabs = new JTabbedPane();
-        tabs.setFont(new Font("SansSerif", Font.BOLD, 13));
+
+        tabs.setFont(new Font("Georgia", Font.BOLD, 12));
         tabs.setBackground(WHITE);
         tabs.setForeground(BURGUNDY);
+        tabs.setBorder(BorderFactory.createEmptyBorder());
 
         tabs.addTab("  Create Account  ", createCreatePanel());
         tabs.addTab("  Update Account  ", createUpdatePanel());
@@ -125,6 +140,8 @@ public class ManageStudentAccountsFrame extends JFrame {
 
         add(content, BorderLayout.CENTER);
     }
+
+    // FOOTER
 
     private void createFooter() {
 
@@ -135,12 +152,15 @@ public class ManageStudentAccountsFrame extends JFrame {
         JLabel footerLabel = new JLabel(
                 "LibraryLink  |  Student Account Administration"
         );
-        footerLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        footerLabel.setFont(new Font("Georgia", Font.PLAIN, 11));
         footerLabel.setForeground(MUTED);
 
         JButton closeButton = createButton(
-                "CLOSE", DARK_BURGUNDY, WHITE
+                "CLOSE",
+                DARK_BURGUNDY,
+                WHITE
         );
+
         closeButton.addActionListener(e -> dispose());
 
         footer.add(footerLabel, BorderLayout.WEST);
@@ -174,22 +194,29 @@ public class ManageStudentAccountsFrame extends JFrame {
         addNote(panel, note, 4);
 
         JButton refreshButton = createButton(
-                "REFRESH MEMBERS", CREAM, BURGUNDY
+                "REFRESH MEMBERS",
+                CREAM,
+                BURGUNDY
         );
 
         JButton clearButton = createButton(
-                "CLEAR", CREAM, BURGUNDY
+                "CLEAR",
+                CREAM,
+                BURGUNDY
         );
 
         JButton createButton = createButton(
-                "CREATE ACCOUNT", BURGUNDY, WHITE
+                "CREATE ACCOUNT",
+                BURGUNDY,
+                WHITE
         );
 
         JPanel buttons = createButtonPanel(
-                refreshButton, clearButton, createButton
+                refreshButton,
+                clearButton,
+                createButton
         );
 
-        // Buttons appear directly below the note.
         addButtonRow(panel, buttons, 5);
 
         createButton.addActionListener(e -> createAccount());
@@ -226,22 +253,29 @@ public class ManageStudentAccountsFrame extends JFrame {
         ), 5);
 
         JButton refreshButton = createButton(
-                "REFRESH ACCOUNTS", CREAM, BURGUNDY
+                "REFRESH ACCOUNTS",
+                CREAM,
+                BURGUNDY
         );
 
         JButton clearButton = createButton(
-                "CLEAR FIELDS", CREAM, BURGUNDY
+                "CLEAR FIELDS",
+                CREAM,
+                BURGUNDY
         );
 
         JButton updateButton = createButton(
-                "SAVE ACCOUNT CHANGES", BURGUNDY, WHITE
+                "SAVE ACCOUNT CHANGES",
+                BURGUNDY,
+                WHITE
         );
 
         JPanel buttons = createButtonPanel(
-                refreshButton, clearButton, updateButton
+                refreshButton,
+                clearButton,
+                updateButton
         );
 
-        // Buttons appear directly below the notes.
         addButtonRow(panel, buttons, 6);
 
         accountComboBox.addActionListener(
@@ -263,8 +297,8 @@ public class ManageStudentAccountsFrame extends JFrame {
         panel.setBackground(WHITE);
 
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(25, 35, 25, 35)
+                BorderFactory.createLineBorder(BORDER, 1),
+                new EmptyBorder(30, 40, 30, 40)
         ));
 
         return panel;
@@ -278,7 +312,7 @@ public class ManageStudentAccountsFrame extends JFrame {
     ) {
 
         JLabel label = new JLabel(labelText);
-        label.setFont(new Font("SansSerif", Font.BOLD, 13));
+        label.setFont(new Font("Georgia", Font.BOLD, 12));
         label.setForeground(TEXT);
 
         GridBagConstraints labelGbc = new GridBagConstraints();
@@ -287,7 +321,7 @@ public class ManageStudentAccountsFrame extends JFrame {
         labelGbc.weightx = 0;
         labelGbc.fill = GridBagConstraints.NONE;
         labelGbc.anchor = GridBagConstraints.WEST;
-        labelGbc.insets = new Insets(9, 8, 9, 18);
+        labelGbc.insets = new Insets(10, 8, 10, 20);
 
         GridBagConstraints fieldGbc = new GridBagConstraints();
         fieldGbc.gridx = 1;
@@ -295,7 +329,7 @@ public class ManageStudentAccountsFrame extends JFrame {
         fieldGbc.weightx = 1;
         fieldGbc.fill = GridBagConstraints.HORIZONTAL;
         fieldGbc.anchor = GridBagConstraints.WEST;
-        fieldGbc.insets = new Insets(9, 8, 9, 8);
+        fieldGbc.insets = new Insets(10, 8, 10, 8);
 
         panel.add(label, labelGbc);
         panel.add(component, fieldGbc);
@@ -317,8 +351,6 @@ public class ManageStudentAccountsFrame extends JFrame {
     }
 
     // BUTTON ROW POSITIONING
-    // Buttons stay directly below the fields and notes.
-    // Extra vertical space is placed underneath the buttons.
 
     private void addButtonRow(
             JPanel panel,
@@ -335,11 +367,10 @@ public class ManageStudentAccountsFrame extends JFrame {
         gbc.weighty = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTH;
-        gbc.insets = new Insets(25, 8, 5, 8);
+        gbc.insets = new Insets(12, 8, 5, 8);
 
         panel.add(buttons, gbc);
 
-        // Flexible empty space goes BELOW the buttons.
         GridBagConstraints filler = new GridBagConstraints();
 
         filler.gridx = 0;
@@ -358,10 +389,10 @@ public class ManageStudentAccountsFrame extends JFrame {
             JButton third
     ) {
 
-        JPanel buttons = new JPanel(new GridLayout(1, 3, 12, 0));
+        JPanel buttons = new JPanel(new GridLayout(1, 3, 10, 0));
         buttons.setOpaque(false);
 
-        Dimension buttonSize = new Dimension(170, 44);
+        Dimension buttonSize = new Dimension(170, 40);
 
         first.setPreferredSize(buttonSize);
         second.setPreferredSize(buttonSize);
@@ -382,8 +413,7 @@ public class ManageStudentAccountsFrame extends JFrame {
             Color accent
     ) {
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        JPanel card = new JPanel(new BorderLayout());
         card.setBackground(WHITE);
 
         card.setBorder(BorderFactory.createCompoundBorder(
@@ -392,15 +422,26 @@ public class ManageStudentAccountsFrame extends JFrame {
         ));
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         titleLabel.setForeground(MUTED);
 
-        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 25));
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 27));
         valueLabel.setForeground(accent);
 
-        card.add(titleLabel);
-        card.add(Box.createVerticalStrut(5));
-        card.add(valueLabel);
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setOpaque(false);
+
+        textPanel.add(titleLabel);
+        textPanel.add(Box.createVerticalStrut(7));
+        textPanel.add(valueLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        card.add(textPanel, BorderLayout.CENTER);
+        card.add(decoration, BorderLayout.EAST);
 
         return card;
     }
@@ -410,15 +451,18 @@ public class ManageStudentAccountsFrame extends JFrame {
     private JTextField createTextField() {
 
         JTextField field = new JTextField();
-        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setForeground(TEXT);
         field.setBackground(WHITE);
+        field.setCaretColor(BURGUNDY);
+
         field.setPreferredSize(new Dimension(300, 42));
         field.setMinimumSize(new Dimension(180, 42));
 
         field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(8, 10, 8, 10)
+                BorderFactory.createLineBorder(BORDER, 1),
+                new EmptyBorder(8, 12, 8, 12)
         ));
 
         return field;
@@ -427,15 +471,18 @@ public class ManageStudentAccountsFrame extends JFrame {
     private JPasswordField createPasswordField() {
 
         JPasswordField field = new JPasswordField();
-        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setForeground(TEXT);
         field.setBackground(WHITE);
+        field.setCaretColor(BURGUNDY);
+
         field.setPreferredSize(new Dimension(300, 42));
         field.setMinimumSize(new Dimension(180, 42));
 
         field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(8, 10, 8, 10)
+                BorderFactory.createLineBorder(BORDER, 1),
+                new EmptyBorder(8, 12, 8, 12)
         ));
 
         return field;
@@ -443,17 +490,20 @@ public class ManageStudentAccountsFrame extends JFrame {
 
     private void styleComboBox(JComboBox<?> comboBox) {
 
-        comboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         comboBox.setBackground(WHITE);
         comboBox.setForeground(TEXT);
+
         comboBox.setPreferredSize(new Dimension(300, 42));
         comboBox.setMinimumSize(new Dimension(180, 42));
+
+        comboBox.setBorder(BorderFactory.createLineBorder(BORDER, 1));
     }
 
     private JLabel createNote(String text) {
 
         JLabel note = new JLabel(text);
-        note.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        note.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         note.setForeground(MUTED);
 
         return note;
@@ -467,13 +517,18 @@ public class ManageStudentAccountsFrame extends JFrame {
 
         JButton button = new JButton(text);
 
-        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setBackground(background);
         button.setForeground(foreground);
+
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(new EmptyBorder(11, 12, 11, 12));
         button.setOpaque(true);
+
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD, 1),
+                new EmptyBorder(10, 14, 10, 14)
+        ));
 
         return button;
     }
@@ -867,6 +922,8 @@ public class ManageStudentAccountsFrame extends JFrame {
 
         clearUpdatePasswords();
     }
+
+    // ERROR MESSAGE
 
     private void showError(String message) {
 

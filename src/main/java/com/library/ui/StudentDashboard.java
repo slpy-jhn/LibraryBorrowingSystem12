@@ -1,3 +1,4 @@
+
 package com.library.ui;
 
 import com.library.service.StudentDashboardService;
@@ -12,13 +13,15 @@ import java.sql.SQLException;
 
 public class StudentDashboard extends JFrame {
 
-    private final Color BURGUNDY = new Color(91, 28, 43);
-    private final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private final Color GOLD = new Color(205, 164, 82);
-    private final Color CREAM = new Color(250, 247, 240);
-    private final Color WHITE = Color.WHITE;
-    private final Color TEXT_DARK = new Color(55, 45, 43);
-    private final Color TEXT_GRAY = new Color(125, 116, 110);
+    // Vintage color palette
+    private final Color BURGUNDY = new Color(75, 20, 36);
+    private final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private final Color WINE = new Color(112, 43, 59);
+    private final Color GOLD = new Color(176, 141, 87);
+    private final Color CREAM = new Color(243, 235, 221);
+    private final Color WHITE = new Color(255, 252, 245);
+    private final Color TEXT_DARK = new Color(53, 37, 31);
+    private final Color TEXT_GRAY = new Color(130, 115, 103);
 
     private final UserSession session;
     private final int memberId;
@@ -35,13 +38,17 @@ public class StudentDashboard extends JFrame {
             );
         }
 
-        this.memberId = session.requireStudent();
         this.session = session;
+        this.memberId = session.requireStudent();
 
         setTitle("LibraryLink - Student Dashboard");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1000, 650));
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+        setSize(1100, 760);
+        setMinimumSize(new Dimension(1100, 760));
+        setResizable(true);
+        setLocationRelativeTo(null);
+
         setLayout(new BorderLayout());
 
         add(createSidebar(), BorderLayout.WEST);
@@ -50,32 +57,64 @@ public class StudentDashboard extends JFrame {
         loadStudentStats();
     }
 
+    // =========================
+    // SIDEBAR
+    // =========================
+
     private JPanel createSidebar() {
 
-        JPanel sidebar = new JPanel();
-        sidebar.setBackground(BURGUNDY);
-        sidebar.setPreferredSize(new Dimension(260, 0));
-        sidebar.setLayout(new BorderLayout());
+        JPanel sidebar = new JPanel(new BorderLayout()) {
 
+            @Override
+            protected void paintComponent(Graphics g) {
+
+                super.paintComponent(g);
+
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                g2.setRenderingHint(
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
+                );
+
+                GradientPaint gradient = new GradientPaint(
+                        0, 0, BURGUNDY,
+                        getWidth(), getHeight(), WINE
+                );
+
+                g2.setPaint(gradient);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                g2.dispose();
+            }
+        };
+
+        sidebar.setPreferredSize(new Dimension(260, 760));
+        sidebar.setOpaque(false);
+
+        // Top section
         JPanel topSection = new JPanel();
         topSection.setOpaque(false);
         topSection.setLayout(
                 new BoxLayout(topSection, BoxLayout.Y_AXIS)
         );
+
         topSection.setBorder(
-                new EmptyBorder(28, 20, 15, 20)
+                new EmptyBorder(30, 20, 15, 20)
         );
 
-        // LibraryLink logo
-        JPanel logoRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        // Logo and brand
+        JPanel logoRow = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 0, 0)
+        );
         logoRow.setOpaque(false);
         logoRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel logo = new JLabel("L");
-        logo.setFont(new Font("Serif", Font.BOLD, 35));
+        logo.setFont(new Font("Georgia", Font.BOLD, 34));
         logo.setForeground(GOLD);
-        logo.setPreferredSize(new Dimension(48, 48));
         logo.setHorizontalAlignment(SwingConstants.CENTER);
+        logo.setPreferredSize(new Dimension(48, 48));
         logo.setBorder(
                 BorderFactory.createLineBorder(GOLD, 2)
         );
@@ -85,36 +124,40 @@ public class StudentDashboard extends JFrame {
         brandText.setLayout(
                 new BoxLayout(brandText, BoxLayout.Y_AXIS)
         );
-        brandText.setBorder(new EmptyBorder(2, 12, 0, 0));
+        brandText.setBorder(
+                new EmptyBorder(3, 12, 0, 0)
+        );
 
         JLabel brand = new JLabel("LibraryLink");
-        brand.setFont(new Font("Segoe UI", Font.BOLD, 21));
+        brand.setFont(new Font("Georgia", Font.BOLD, 23));
         brand.setForeground(WHITE);
 
         JLabel subtitle = new JLabel("STUDENT PORTAL");
-        subtitle.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        subtitle.setFont(new Font("Palatino Linotype", Font.BOLD, 10));
         subtitle.setForeground(GOLD);
 
         brandText.add(brand);
-        brandText.add(Box.createVerticalStrut(4));
+        brandText.add(Box.createVerticalStrut(5));
         brandText.add(subtitle);
 
         logoRow.add(logo);
         logoRow.add(brandText);
 
         topSection.add(logoRow);
-        topSection.add(Box.createVerticalStrut(35));
+        topSection.add(Box.createVerticalStrut(42));
 
+        // Menu heading
         JLabel menuHeading = new JLabel("STUDENT MENU");
         menuHeading.setFont(
-                new Font("Segoe UI", Font.BOLD, 10)
+                new Font("Palatino Linotype", Font.BOLD, 11)
         );
-        menuHeading.setForeground(new Color(220, 190, 155));
+        menuHeading.setForeground(new Color(224, 190, 164));
         menuHeading.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         topSection.add(menuHeading);
-        topSection.add(Box.createVerticalStrut(14));
+        topSection.add(Box.createVerticalStrut(15));
 
+        // Navigation items
         String[] menuItems = {
                 "Dashboard",
                 "Browse Books",
@@ -133,8 +176,10 @@ public class StudentDashboard extends JFrame {
 
         for (String item : menuItems) {
 
+            boolean isActive = item.equals("Dashboard");
+
             RoundedMenuButton button =
-                    new RoundedMenuButton(item);
+                    new RoundedMenuButton(item, isActive);
 
             button.addActionListener(e -> {
 
@@ -196,39 +241,38 @@ public class StudentDashboard extends JFrame {
                 new BoxLayout(bottomSection, BoxLayout.Y_AXIS)
         );
         bottomSection.setBorder(
-                new EmptyBorder(10, 18, 25, 18)
+                new EmptyBorder(10, 20, 28, 20)
         );
 
         JSeparator separator = new JSeparator();
-        separator.setForeground(new Color(130, 75, 82));
+        separator.setForeground(GOLD);
         separator.setMaximumSize(
                 new Dimension(Integer.MAX_VALUE, 1)
         );
 
         JButton logoutButton = new JButton("Log Out");
         logoutButton.setFont(
-                new Font("Bookman Old Style", Font.BOLD, 14)
+                new Font("Palatino Linotype", Font.BOLD, 14)
         );
         logoutButton.setForeground(WHITE);
         logoutButton.setBackground(DARK_BURGUNDY);
         logoutButton.setFocusPainted(false);
         logoutButton.setBorder(
-                new EmptyBorder(12, 15, 12, 15)
+                new EmptyBorder(13, 15, 13, 15)
         );
         logoutButton.setCursor(
                 new Cursor(Cursor.HAND_CURSOR)
         );
         logoutButton.setAlignmentX(Component.LEFT_ALIGNMENT);
         logoutButton.setMaximumSize(
-                new Dimension(Integer.MAX_VALUE, 46)
+                new Dimension(Integer.MAX_VALUE, 48)
         );
 
         logoutButton.addMouseListener(new MouseAdapter() {
+
             @Override
             public void mouseEntered(MouseEvent e) {
-                logoutButton.setBackground(
-                        new Color(115, 37, 52)
-                );
+                logoutButton.setBackground(WINE);
             }
 
             @Override
@@ -261,12 +305,16 @@ public class StudentDashboard extends JFrame {
         return sidebar;
     }
 
+    // =========================
+    // MAIN DASHBOARD CONTENT
+    // =========================
+
     private JPanel createMainContent(String username) {
 
-        JPanel main = new JPanel(new BorderLayout(20, 25));
+        JPanel main = new JPanel(new BorderLayout(0, 28));
         main.setBackground(CREAM);
         main.setBorder(
-                new EmptyBorder(35, 40, 35, 40)
+                new EmptyBorder(38, 38, 35, 38)
         );
 
         // Header
@@ -278,7 +326,7 @@ public class StudentDashboard extends JFrame {
 
         JLabel heading = new JLabel("Student Dashboard");
         heading.setFont(
-                new Font("Segoe UI", Font.BOLD, 30)
+                new Font("Georgia", Font.BOLD, 39)
         );
         heading.setForeground(BURGUNDY);
         heading.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -287,92 +335,113 @@ public class StudentDashboard extends JFrame {
                 "Welcome back, " + username + "!"
         );
         welcome.setFont(
-                new Font("Segoe UI", Font.PLAIN, 15)
+                new Font("Book Antiqua", Font.PLAIN, 17)
         );
         welcome.setForeground(TEXT_GRAY);
         welcome.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        header.add(heading);
-        header.add(Box.createVerticalStrut(7));
-        header.add(welcome);
-
-        // Gold divider
         JPanel goldLine = new JPanel();
         goldLine.setBackground(GOLD);
-        goldLine.setPreferredSize(new Dimension(65, 3));
-        goldLine.setMaximumSize(new Dimension(65, 3));
+        goldLine.setPreferredSize(new Dimension(65, 4));
+        goldLine.setMaximumSize(new Dimension(65, 4));
         goldLine.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        header.add(Box.createVerticalStrut(16));
+        header.add(heading);
+        header.add(Box.createVerticalStrut(9));
+        header.add(welcome);
+        header.add(Box.createVerticalStrut(18));
         header.add(goldLine);
 
         // Statistics cards
         JPanel statsPanel = new JPanel(
-                new GridLayout(1, 3, 20, 20)
+                new GridLayout(1, 3, 18, 0)
         );
         statsPanel.setOpaque(false);
 
         statsPanel.add(createStatCard(
-                "Currently Borrowed",
+                "CURRENTLY BORROWED",
                 "0",
                 "Books in your possession",
                 1
         ));
 
         statsPanel.add(createStatCard(
-                "Overdue Books",
+                "OVERDUE BOOKS",
                 "0",
                 "Books past their due date",
                 2
         ));
 
         statsPanel.add(createStatCard(
-                "Returned Books",
+                "RETURNED BOOKS",
                 "0",
                 "Previously returned books",
                 3
         ));
 
-        // Library information card
+        // Welcome information card
         RoundedPanel infoPanel = new RoundedPanel(
                 WHITE,
-                20
+                18
         );
+
         infoPanel.setLayout(
-                new BorderLayout(10, 18)
+                new BorderLayout(0, 18)
         );
+
         infoPanel.setBorder(
-                new EmptyBorder(30, 32, 30, 32)
+                new EmptyBorder(28, 30, 28, 30)
         );
 
         JLabel infoTitle = new JLabel(
                 "Welcome to LibraryLink"
         );
         infoTitle.setFont(
-                new Font("Segoe UI", Font.BOLD, 21)
+                new Font("Georgia", Font.BOLD, 24)
         );
         infoTitle.setForeground(BURGUNDY);
 
-        JLabel infoText = new JLabel(
+        JLabel infoDescription = new JLabel(
+                "Your personal library portal makes it easier to "
+                        + "access and manage your library activities."
+        );
+
+        infoDescription.setFont(
+                new Font("Book Antiqua", Font.PLAIN, 15)
+        );
+        infoDescription.setForeground(TEXT_GRAY);
+
+        JLabel features = new JLabel(
                 "<html>"
-                        + "Your personal library portal gives you easy access "
-                        + "to your library activities.<br><br>"
-                        + "• Browse books available in the library.<br><br>"
-                        + "• Check your currently borrowed and overdue books.<br><br>"
-                        + "• Submit and monitor your borrowing requests.<br><br>"
-                        + "• Track your return requests and borrowing history.<br><br>"
-                        + "• View and manage your account information."
+                        + "<div style='line-height:1.8;'>"
+                        + "&#8226;&nbsp; Browse books available in the library.<br>"
+                        + "&#8226;&nbsp; Check your borrowed and overdue books.<br>"
+                        + "&#8226;&nbsp; Submit and monitor borrowing requests.<br>"
+                        + "&#8226;&nbsp; Track your return requests and borrowing history.<br>"
+                        + "&#8226;&nbsp; View and manage your account information."
+                        + "</div>"
                         + "</html>"
         );
 
-        infoText.setFont(
-                new Font("Segoe UI", Font.PLAIN, 14)
+        features.setFont(
+                new Font("Book Antiqua", Font.PLAIN, 15)
         );
-        infoText.setForeground(TEXT_DARK);
+        features.setForeground(TEXT_DARK);
+
+        JPanel infoContent = new JPanel();
+        infoContent.setOpaque(false);
+        infoContent.setLayout(
+                new BoxLayout(infoContent, BoxLayout.Y_AXIS)
+        );
+
+        infoContent.add(infoDescription);
+        infoContent.add(Box.createVerticalStrut(15));
+        infoContent.add(features);
 
         infoPanel.add(infoTitle, BorderLayout.NORTH);
-        infoPanel.add(infoText, BorderLayout.CENTER);
+        infoPanel.add(infoContent, BorderLayout.CENTER);
 
+        // Center content
         JPanel center = new JPanel(
                 new BorderLayout(0, 25)
         );
@@ -387,6 +456,10 @@ public class StudentDashboard extends JFrame {
         return main;
     }
 
+    // =========================
+    // STATISTICS CARDS
+    // =========================
+
     private JPanel createStatCard(
             String title,
             String value,
@@ -396,7 +469,7 @@ public class StudentDashboard extends JFrame {
 
         RoundedPanel card = new RoundedPanel(
                 WHITE,
-                18
+                16
         );
 
         card.setLayout(
@@ -404,33 +477,33 @@ public class StudentDashboard extends JFrame {
         );
 
         card.setBorder(
-                new EmptyBorder(23, 23, 23, 23)
+                new EmptyBorder(22, 22, 22, 22)
         );
 
-        // Gold accent line
+        // Gold accent
         JPanel accent = new JPanel();
         accent.setBackground(GOLD);
-        accent.setPreferredSize(new Dimension(45, 4));
-        accent.setMaximumSize(new Dimension(45, 4));
+        accent.setPreferredSize(new Dimension(42, 4));
+        accent.setMaximumSize(new Dimension(42, 4));
         accent.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(
-                new Font("Segoe UI", Font.PLAIN, 14)
+                new Font("Book Antiqua", Font.BOLD, 13)
         );
         titleLabel.setForeground(TEXT_GRAY);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel valueLabel = new JLabel(value);
         valueLabel.setFont(
-                new Font("Segoe UI", Font.BOLD, 36)
+                new Font("Georgia", Font.BOLD, 42)
         );
         valueLabel.setForeground(BURGUNDY);
         valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel descriptionLabel = new JLabel(description);
         descriptionLabel.setFont(
-                new Font("Segoe UI", Font.PLAIN, 12)
+                new Font("Book Antiqua", Font.PLAIN, 13)
         );
         descriptionLabel.setForeground(TEXT_GRAY);
         descriptionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -444,13 +517,17 @@ public class StudentDashboard extends JFrame {
         card.add(accent);
         card.add(Box.createVerticalStrut(18));
         card.add(titleLabel);
-        card.add(Box.createVerticalStrut(10));
+        card.add(Box.createVerticalStrut(12));
         card.add(valueLabel);
-        card.add(Box.createVerticalStrut(7));
+        card.add(Box.createVerticalStrut(8));
         card.add(descriptionLabel);
 
         return card;
     }
+
+    // =========================
+    // LOAD STUDENT STATISTICS
+    // =========================
 
     private void loadStudentStats() {
 
@@ -492,12 +569,19 @@ public class StudentDashboard extends JFrame {
         }
     }
 
+    // =========================
+    // OPEN OTHER WINDOWS
+    // =========================
+
     private void openFrame(JFrame frame) {
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
     }
 
-    // Rounded background panel
+    // =========================
+    // ROUNDED PANEL
+    // =========================
+
     private class RoundedPanel extends JPanel {
 
         private final Color backgroundColor;
@@ -515,6 +599,8 @@ public class StudentDashboard extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
 
+            super.paintComponent(g);
+
             Graphics2D g2 = (Graphics2D) g.create();
 
             g2.setRenderingHint(
@@ -522,43 +608,75 @@ public class StudentDashboard extends JFrame {
                     RenderingHints.VALUE_ANTIALIAS_ON
             );
 
+            // Soft shadow
+            g2.setColor(new Color(70, 45, 30, 18));
+
+            g2.fillRoundRect(
+                    3,
+                    4,
+                    getWidth() - 6,
+                    getHeight() - 6,
+                    cornerRadius,
+                    cornerRadius
+            );
+
+            // Ivory card background
             g2.setColor(backgroundColor);
 
             g2.fillRoundRect(
                     0,
                     0,
-                    getWidth(),
-                    getHeight(),
+                    getWidth() - 4,
+                    getHeight() - 5,
+                    cornerRadius,
+                    cornerRadius
+            );
+
+            // Antique gold border
+            g2.setColor(new Color(176, 141, 87, 130));
+            g2.setStroke(new BasicStroke(1f));
+
+            g2.drawRoundRect(
+                    0,
+                    0,
+                    getWidth() - 4,
+                    getHeight() - 5,
                     cornerRadius,
                     cornerRadius
             );
 
             g2.dispose();
-
-            super.paintComponent(g);
         }
     }
 
-    // Custom sidebar navigation button
+    // =========================
+    // SIDEBAR MENU BUTTON
+    // =========================
+
     private class RoundedMenuButton extends JButton {
 
         private boolean hovered = false;
-        private final String buttonText;
+        private final boolean active;
 
-        public RoundedMenuButton(String text) {
+        public RoundedMenuButton(
+                String text,
+                boolean active
+        ) {
 
             super(text);
-            this.buttonText = text;
+            this.active = active;
 
             setFont(
-                    new Font("Bookman Old Style", Font.PLAIN, 13)
+                    new Font("Palatino Linotype", Font.PLAIN, 14)
             );
+
             setForeground(WHITE);
             setHorizontalAlignment(SwingConstants.LEFT);
             setFocusPainted(false);
             setBorderPainted(false);
             setContentAreaFilled(false);
             setOpaque(false);
+
             setCursor(
                     new Cursor(Cursor.HAND_CURSOR)
             );
@@ -593,6 +711,8 @@ public class StudentDashboard extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
 
+            super.paintComponent(g);
+
             Graphics2D g2 = (Graphics2D) g.create();
 
             g2.setRenderingHint(
@@ -600,32 +720,47 @@ public class StudentDashboard extends JFrame {
                     RenderingHints.VALUE_ANTIALIAS_ON
             );
 
-            if (hovered) {
-                g2.setColor(new Color(115, 43, 58));
+            // Active and hover background
+            if (active) {
+                g2.setColor(new Color(255, 252, 245, 35));
 
                 g2.fillRoundRect(
                         0,
                         0,
                         getWidth(),
                         getHeight(),
-                        12,
-                        12
+                        8,
+                        8
                 );
 
-                g2.setColor(GOLD);
+            } else if (hovered) {
+                g2.setColor(new Color(255, 252, 245, 20));
+
                 g2.fillRoundRect(
                         0,
+                        0,
+                        getWidth(),
+                        getHeight(),
                         8,
+                        8
+                );
+            }
+
+            // Gold accent indicator
+            if (active) {
+                g2.setColor(GOLD);
+
+                g2.fillRoundRect(
+                        0,
+                        7,
                         4,
-                        getHeight() - 16,
+                        getHeight() - 14,
                         4,
                         4
                 );
             }
 
             g2.dispose();
-
-            super.paintComponent(g);
         }
     }
 }

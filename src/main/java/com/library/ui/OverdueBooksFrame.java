@@ -25,14 +25,17 @@ public class OverdueBooksFrame extends JFrame {
     private JLabel severeOverdueValue;
     private JLabel displayedValue;
 
-    private static final Color BURGUNDY = new Color(91, 28, 43);
-    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private static final Color GOLD = new Color(205, 164, 82);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 45, 45);
-    private static final Color MUTED = new Color(125, 115, 110);
-    private static final Color RED = new Color(174, 55, 55);
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
+
+    private static final Color RED = new Color(175, 55, 55);
     private static final Color DARK_RED = new Color(135, 35, 35);
 
     public OverdueBooksFrame() {
@@ -57,19 +60,15 @@ public class OverdueBooksFrame extends JFrame {
 
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(BURGUNDY);
-        header.setBorder(
-                BorderFactory.createEmptyBorder(22, 28, 22, 28)
-        );
+        header.setBorder(new EmptyBorder(22, 28, 22, 28));
 
         JPanel titlePanel = new JPanel();
         titlePanel.setOpaque(false);
-        titlePanel.setLayout(
-                new BoxLayout(titlePanel, BoxLayout.Y_AXIS)
-        );
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
 
         JLabel title = new JLabel("Overdue Books");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 25));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "Monitor unreturned books that have passed their due dates"
@@ -82,15 +81,7 @@ public class OverdueBooksFrame extends JFrame {
         titlePanel.add(subtitle);
 
         JButton closeButton = new JButton("CLOSE");
-        styleButton(closeButton, WHITE, BURGUNDY);
-
-        closeButton.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(GOLD, 1),
-                        BorderFactory.createEmptyBorder(9, 18, 9, 18)
-                )
-        );
-
+        styleButton(closeButton, DARK_BURGUNDY, WHITE);
         closeButton.addActionListener(e -> dispose());
 
         header.add(titlePanel, BorderLayout.WEST);
@@ -103,13 +94,9 @@ public class OverdueBooksFrame extends JFrame {
 
         JPanel main = new JPanel(new BorderLayout(0, 18));
         main.setBackground(CREAM);
-        main.setBorder(
-                BorderFactory.createEmptyBorder(20, 25, 10, 25)
-        );
+        main.setBorder(new EmptyBorder(20, 25, 10, 25));
 
-        JPanel summaryPanel = new JPanel(
-                new GridLayout(1, 3, 15, 0)
-        );
+        JPanel summaryPanel = new JPanel(new GridLayout(1, 3, 15, 0));
         summaryPanel.setOpaque(false);
 
         totalOverdueValue = createSummaryValue();
@@ -141,7 +128,7 @@ public class OverdueBooksFrame extends JFrame {
         toolbar.setOpaque(false);
 
         JLabel sectionTitle = new JLabel("Overdue Books Directory");
-        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        sectionTitle.setFont(new Font("Georgia", Font.BOLD, 17));
         sectionTitle.setForeground(BURGUNDY);
 
         JPanel searchPanel = new JPanel(new BorderLayout(8, 0));
@@ -154,18 +141,14 @@ public class OverdueBooksFrame extends JFrame {
                 "Search by member, Student/Employee ID, or book title"
         );
 
-        searchField.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(220, 210, 200)
-                        ),
-                        BorderFactory.createEmptyBorder(7, 10, 7, 10)
-                )
-        );
+        searchField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(7, 10, 7, 10)
+        ));
 
         JButton clearButton = createButton(
                 "CLEAR",
-                new Color(115, 105, 100),
+                MUTED,
                 WHITE
         );
 
@@ -208,23 +191,15 @@ public class OverdueBooksFrame extends JFrame {
         styleTable();
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(
-                BorderFactory.createLineBorder(
-                        new Color(225, 215, 205)
-                )
-        );
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(WHITE);
 
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(WHITE);
-        tablePanel.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(225, 215, 205)
-                        ),
-                        BorderFactory.createEmptyBorder(8, 8, 8, 8)
-                )
-        );
+        tablePanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(8, 8, 8, 8)
+        ));
 
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
@@ -258,23 +233,17 @@ public class OverdueBooksFrame extends JFrame {
                     }
 
                     @Override
-                    public void insertUpdate(
-                            javax.swing.event.DocumentEvent e
-                    ) {
+                    public void insertUpdate(javax.swing.event.DocumentEvent e) {
                         filter();
                     }
 
                     @Override
-                    public void removeUpdate(
-                            javax.swing.event.DocumentEvent e
-                    ) {
+                    public void removeUpdate(javax.swing.event.DocumentEvent e) {
                         filter();
                     }
 
                     @Override
-                    public void changedUpdate(
-                            javax.swing.event.DocumentEvent e
-                    ) {
+                    public void changedUpdate(javax.swing.event.DocumentEvent e) {
                         filter();
                     }
                 }
@@ -290,13 +259,11 @@ public class OverdueBooksFrame extends JFrame {
         );
 
         bottom.setBackground(CREAM);
-        bottom.setBorder(
-                BorderFactory.createEmptyBorder(5, 25, 12, 25)
-        );
+        bottom.setBorder(new EmptyBorder(5, 25, 12, 25));
 
         JButton detailsButton = createButton(
                 "VIEW DETAILS",
-                new Color(100, 90, 85),
+                MUTED,
                 WHITE
         );
 
@@ -322,7 +289,7 @@ public class OverdueBooksFrame extends JFrame {
     private JLabel createSummaryValue() {
 
         JLabel label = new JLabel("0");
-        label.setFont(new Font("Segoe UI", Font.BOLD, 27));
+        label.setFont(new Font("Georgia", Font.BOLD, 27));
         label.setForeground(BURGUNDY);
 
         return label;
@@ -334,32 +301,38 @@ public class OverdueBooksFrame extends JFrame {
             String description
     ) {
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        JPanel card = new JPanel(new BorderLayout());
         card.setBackground(WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(14, 17, 14, 17)
+        ));
 
-        card.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(230, 220, 210)
-                        ),
-                        BorderFactory.createEmptyBorder(15, 17, 15, 17)
-                )
-        );
+        JPanel content = new JPanel();
+        content.setOpaque(false);
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
         JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        headingLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         headingLabel.setForeground(MUTED);
 
         JLabel descriptionLabel = new JLabel(description);
         descriptionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         descriptionLabel.setForeground(MUTED);
 
-        card.add(headingLabel);
-        card.add(Box.createVerticalStrut(8));
-        card.add(value);
-        card.add(Box.createVerticalStrut(4));
-        card.add(descriptionLabel);
+        content.add(headingLabel);
+        content.add(Box.createVerticalStrut(8));
+        content.add(value);
+        content.add(Box.createVerticalStrut(4));
+        content.add(descriptionLabel);
+
+        JLabel watermark = new JLabel("L");
+        watermark.setFont(new Font("Georgia", Font.BOLD, 48));
+        watermark.setForeground(new Color(225, 211, 185));
+        watermark.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        card.add(content, BorderLayout.CENTER);
+        card.add(watermark, BorderLayout.EAST);
 
         return card;
     }
@@ -382,7 +355,7 @@ public class OverdueBooksFrame extends JFrame {
             Color foreground
     ) {
 
-        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setBackground(background);
         button.setForeground(foreground);
         button.setFocusPainted(false);
@@ -390,9 +363,11 @@ public class OverdueBooksFrame extends JFrame {
         button.setCursor(
                 Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         );
-        button.setBorder(
-                BorderFactory.createEmptyBorder(10, 16, 10, 16)
-        );
+
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD, 1),
+                new EmptyBorder(9, 15, 9, 15)
+        ));
     }
 
     private void styleTable() {
@@ -400,23 +375,21 @@ public class OverdueBooksFrame extends JFrame {
         table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         table.setForeground(TEXT);
         table.setBackground(WHITE);
-        table.setRowHeight(36);
+        table.setRowHeight(38);
         table.setShowVerticalLines(false);
         table.setShowHorizontalLines(true);
         table.setGridColor(new Color(240, 235, 230));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(new Color(245, 231, 207));
+        table.setSelectionBackground(LIGHT_GOLD);
         table.setSelectionForeground(BURGUNDY);
         table.setFillsViewportHeight(true);
 
         table.getTableHeader().setFont(
-                new Font("Segoe UI", Font.BOLD, 12)
+                new Font("Georgia", Font.BOLD, 11)
         );
         table.getTableHeader().setBackground(BURGUNDY);
         table.getTableHeader().setForeground(WHITE);
-        table.getTableHeader().setPreferredSize(
-                new Dimension(0, 40)
-        );
+        table.getTableHeader().setPreferredSize(new Dimension(0, 42));
         table.getTableHeader().setReorderingAllowed(false);
 
         DefaultTableCellRenderer renderer =
@@ -443,22 +416,18 @@ public class OverdueBooksFrame extends JFrame {
                                 );
 
                         if (isSelected) {
-                            component.setBackground(
-                                    new Color(245, 231, 207)
-                            );
+                            component.setBackground(LIGHT_GOLD);
                             component.setForeground(BURGUNDY);
                         } else {
                             component.setBackground(
                                     row % 2 == 0
                                             ? WHITE
-                                            : new Color(250, 248, 244)
+                                            : new Color(250, 247, 240)
                             );
                             component.setForeground(TEXT);
                         }
 
-                        setBorder(
-                                BorderFactory.createEmptyBorder(0, 8, 0, 8)
-                        );
+                        setBorder(new EmptyBorder(0, 8, 0, 8));
 
                         return component;
                     }
@@ -494,15 +463,13 @@ public class OverdueBooksFrame extends JFrame {
                                 );
 
                         if (isSelected) {
-                            component.setBackground(
-                                    new Color(245, 231, 207)
-                            );
+                            component.setBackground(LIGHT_GOLD);
                             component.setForeground(BURGUNDY);
                         } else {
                             component.setBackground(
                                     row % 2 == 0
                                             ? WHITE
-                                            : new Color(250, 248, 244)
+                                            : new Color(250, 247, 240)
                             );
 
                             int days = Integer.parseInt(
@@ -515,7 +482,9 @@ public class OverdueBooksFrame extends JFrame {
                         }
 
                         setHorizontalAlignment(SwingConstants.CENTER);
-                        setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        setFont(new Font("Georgia", Font.BOLD, 12));
+
+                        setBorder(new EmptyBorder(0, 8, 0, 8));
 
                         return component;
                     }
@@ -567,10 +536,8 @@ public class OverdueBooksFrame extends JFrame {
                 ORDER BY t.due_date ASC
                 """;
 
-        try (Connection connection =
-                     DatabaseConnection.getConnection();
-             PreparedStatement statement =
-                     connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             String keyword = "%" + search + "%";
 
@@ -668,19 +635,14 @@ public class OverdueBooksFrame extends JFrame {
                 "Days Overdue"
         };
 
-        JPanel detailsPanel = new JPanel(
-                new GridLayout(0, 2, 12, 12)
-        );
-
+        JPanel detailsPanel = new JPanel(new GridLayout(0, 2, 12, 12));
         detailsPanel.setBackground(WHITE);
-        detailsPanel.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        );
+        detailsPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
         for (int i = 0; i < labels.length; i++) {
 
             JLabel nameLabel = new JLabel(labels[i] + ":");
-            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            nameLabel.setFont(new Font("Georgia", Font.BOLD, 12));
             nameLabel.setForeground(BURGUNDY);
 
             String value = String.valueOf(

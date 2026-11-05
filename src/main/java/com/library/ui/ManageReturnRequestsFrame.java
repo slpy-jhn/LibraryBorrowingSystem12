@@ -9,6 +9,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.LocalDate;
@@ -30,15 +31,19 @@ public class ManageReturnRequestsFrame extends JFrame {
 
     private JTextField searchField;
 
-    private static final Color BURGUNDY = new Color(91, 28, 43);
-    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private static final Color GOLD = new Color(205, 164, 82);
-    private static final Color CREAM = new Color(250, 247, 240);
-    private static final Color WHITE = Color.WHITE;
-    private static final Color TEXT = new Color(55, 45, 45);
-    private static final Color MUTED = new Color(125, 115, 110);
-    private static final Color GREEN = new Color(43, 125, 82);
-    private static final Color RED = new Color(174, 55, 55);
+    // LIBRARYLINK THEME
+    private static final Color BURGUNDY = new Color(75, 20, 36);
+    private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private static final Color GOLD = new Color(176, 141, 87);
+    private static final Color CREAM = new Color(243, 235, 221);
+    private static final Color WHITE = new Color(255, 252, 245);
+    private static final Color TEXT = new Color(53, 37, 31);
+    private static final Color MUTED = new Color(130, 115, 103);
+    private static final Color BORDER = new Color(222, 210, 191);
+    private static final Color LIGHT_GOLD = new Color(244, 232, 207);
+
+    private static final Color GREEN = new Color(38, 125, 82);
+    private static final Color RED = new Color(175, 55, 55);
 
     public ManageReturnRequestsFrame(UserSession session) {
 
@@ -51,7 +56,7 @@ public class ManageReturnRequestsFrame extends JFrame {
         session.requireAdmin();
         this.session = session;
 
-        setTitle("Manage Return Requests");
+        setTitle("LibraryLink - Manage Return Requests");
         setSize(1250, 750);
         setMinimumSize(new Dimension(1000, 600));
         setLocationRelativeTo(null);
@@ -67,57 +72,70 @@ public class ManageReturnRequestsFrame extends JFrame {
         loadPendingRequests();
     }
 
+    // ==========================================
+    // HEADER
+    // ==========================================
+
     private void buildHeader() {
 
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(BURGUNDY);
-        header.setBorder(
-                BorderFactory.createEmptyBorder(22, 28, 22, 28)
-        );
+        header.setBorder(new EmptyBorder(22, 28, 22, 28));
 
         JPanel titlePanel = new JPanel();
-        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setLayout(
+                new BoxLayout(titlePanel, BoxLayout.Y_AXIS)
+        );
         titlePanel.setOpaque(false);
 
         JLabel title = new JLabel("Manage Return Requests");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 25));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
-                "Review, approve, and manage student book return requests"
+                "Review, approve, and manage student book return requests."
         );
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        subtitle.setForeground(new Color(235, 220, 215));
+        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setForeground(new Color(235, 220, 207));
 
         titlePanel.add(title);
-        titlePanel.add(Box.createVerticalStrut(5));
+        titlePanel.add(Box.createVerticalStrut(6));
         titlePanel.add(subtitle);
 
-        JButton closeButton = new JButton("CLOSE");
-        styleButton(closeButton, WHITE, BURGUNDY);
-        closeButton.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(GOLD, 1),
-                        BorderFactory.createEmptyBorder(9, 18, 9, 18)
-                )
+        JButton closeButton = createButton(
+                "CLOSE",
+                BURGUNDY,
+                WHITE
         );
         closeButton.addActionListener(e -> dispose());
 
+        JPanel rightPanel = new JPanel(
+                new FlowLayout(FlowLayout.RIGHT, 0, 5)
+        );
+        rightPanel.setOpaque(false);
+        rightPanel.add(closeButton);
+
         header.add(titlePanel, BorderLayout.WEST);
-        header.add(closeButton, BorderLayout.EAST);
+        header.add(rightPanel, BorderLayout.EAST);
 
         add(header, BorderLayout.NORTH);
     }
+
+    // ==========================================
+    // MAIN CONTENT
+    // ==========================================
 
     private void buildMainContent() {
 
         JPanel mainPanel = new JPanel(new BorderLayout(0, 18));
         mainPanel.setBackground(CREAM);
-        mainPanel.setBorder(
-                BorderFactory.createEmptyBorder(20, 25, 10, 25)
-        );
+        mainPanel.setBorder(new EmptyBorder(20, 25, 10, 25));
 
-        JPanel summaryPanel = new JPanel(new GridLayout(1, 3, 15, 0));
+        // SUMMARY CARDS
+
+        JPanel summaryPanel = new JPanel(
+                new GridLayout(1, 3, 15, 0)
+        );
         summaryPanel.setOpaque(false);
 
         pendingValue = createSummaryValue();
@@ -142,46 +160,75 @@ public class ManageReturnRequestsFrame extends JFrame {
                 "Based on current search"
         ));
 
-        JPanel centerPanel = new JPanel(new BorderLayout(0, 12));
+        // CENTER CONTENT
+
+        JPanel centerPanel = new JPanel(
+                new BorderLayout(0, 12)
+        );
         centerPanel.setOpaque(false);
 
-        JPanel toolbar = new JPanel(new BorderLayout(10, 0));
+        // TOOLBAR
+
+        JPanel toolbar = new JPanel(
+                new BorderLayout(10, 0)
+        );
         toolbar.setOpaque(false);
 
-        JLabel sectionTitle = new JLabel("Return Request Directory");
-        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        JLabel sectionTitle = new JLabel(
+                "Return Request Directory"
+        );
+        sectionTitle.setFont(
+                new Font("Georgia", Font.BOLD, 17)
+        );
         sectionTitle.setForeground(BURGUNDY);
 
-        JPanel searchPanel = new JPanel(new BorderLayout(8, 0));
-        searchPanel.setOpaque(false);
+        JPanel searchPanel = new JPanel(
+                new BorderLayout(8, 0)
+        );
+        searchPanel.setBackground(WHITE);
+        searchPanel.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(4, 10, 4, 10)
+                )
+        );
+
+        JLabel searchLabel = new JLabel("SEARCH");
+        searchLabel.setFont(
+                new Font("Georgia", Font.BOLD, 10)
+        );
+        searchLabel.setForeground(MUTED);
 
         searchField = new JTextField();
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        searchField.setPreferredSize(new Dimension(270, 38));
+        searchField.setFont(
+                new Font("Segoe UI", Font.PLAIN, 13)
+        );
+        searchField.setForeground(TEXT);
+        searchField.setBackground(WHITE);
+        searchField.setPreferredSize(
+                new Dimension(250, 36)
+        );
+        searchField.setBorder(
+                BorderFactory.createEmptyBorder(7, 5, 7, 5)
+        );
         searchField.setToolTipText(
                 "Search by student, book, request ID, or transaction ID"
         );
 
-        searchField.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(220, 210, 200)
-                        ),
-                        BorderFactory.createEmptyBorder(7, 10, 7, 10)
-                )
-        );
-
         JButton clearButton = createButton(
                 "CLEAR",
-                new Color(115, 105, 100),
-                WHITE
+                CREAM,
+                BURGUNDY
         );
 
+        searchPanel.add(searchLabel, BorderLayout.WEST);
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(clearButton, BorderLayout.EAST);
 
         toolbar.add(sectionTitle, BorderLayout.WEST);
         toolbar.add(searchPanel, BorderLayout.EAST);
+
+        // TABLE
 
         String[] columns = {
                 "Request ID",
@@ -196,6 +243,7 @@ public class ManageReturnRequestsFrame extends JFrame {
         };
 
         tableModel = new DefaultTableModel(columns, 0) {
+
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -203,17 +251,21 @@ public class ManageReturnRequestsFrame extends JFrame {
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
+
                 if (columnIndex == 0
                         || columnIndex == 1
                         || columnIndex == 2
                         || columnIndex == 4) {
+
                     return Integer.class;
                 }
+
                 return String.class;
             }
         };
 
         table = new JTable(tableModel);
+
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
 
@@ -221,9 +273,7 @@ public class ManageReturnRequestsFrame extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(
-                BorderFactory.createLineBorder(
-                        new Color(225, 215, 205)
-                )
+                BorderFactory.createLineBorder(BORDER)
         );
         scrollPane.getViewport().setBackground(WHITE);
 
@@ -231,12 +281,11 @@ public class ManageReturnRequestsFrame extends JFrame {
         tablePanel.setBackground(WHITE);
         tablePanel.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(225, 215, 205)
-                        ),
-                        BorderFactory.createEmptyBorder(8, 8, 8, 8)
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(8, 8, 8, 8)
                 )
         );
+
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
         centerPanel.add(toolbar, BorderLayout.NORTH);
@@ -247,9 +296,13 @@ public class ManageReturnRequestsFrame extends JFrame {
 
         add(mainPanel, BorderLayout.CENTER);
 
+        // SEARCH FILTER
+
         searchField.getDocument().addDocumentListener(
                 new javax.swing.event.DocumentListener() {
+
                     private void filter() {
+
                         String text = searchField.getText().trim();
 
                         if (text.isEmpty()) {
@@ -288,8 +341,14 @@ public class ManageReturnRequestsFrame extends JFrame {
                 }
         );
 
-        clearButton.addActionListener(e -> searchField.setText(""));
+        clearButton.addActionListener(
+                e -> searchField.setText("")
+        );
     }
+
+    // ==========================================
+    // BOTTOM ACTION PANEL
+    // ==========================================
 
     private void buildBottomPanel() {
 
@@ -299,12 +358,12 @@ public class ManageReturnRequestsFrame extends JFrame {
 
         bottomPanel.setBackground(CREAM);
         bottomPanel.setBorder(
-                BorderFactory.createEmptyBorder(5, 25, 12, 25)
+                new EmptyBorder(5, 25, 12, 25)
         );
 
         JButton detailsButton = createButton(
                 "VIEW DETAILS",
-                new Color(100, 90, 85),
+                BURGUNDY,
                 WHITE
         );
 
@@ -326,10 +385,21 @@ public class ManageReturnRequestsFrame extends JFrame {
                 WHITE
         );
 
-        detailsButton.addActionListener(e -> viewSelectedRequest());
-        approveButton.addActionListener(e -> approveSelectedRequest());
-        rejectButton.addActionListener(e -> rejectSelectedRequest());
-        refreshButton.addActionListener(e -> loadPendingRequests());
+        detailsButton.addActionListener(
+                e -> viewSelectedRequest()
+        );
+
+        approveButton.addActionListener(
+                e -> approveSelectedRequest()
+        );
+
+        rejectButton.addActionListener(
+                e -> rejectSelectedRequest()
+        );
+
+        refreshButton.addActionListener(
+                e -> loadPendingRequests()
+        );
 
         bottomPanel.add(detailsButton);
         bottomPanel.add(approveButton);
@@ -339,10 +409,14 @@ public class ManageReturnRequestsFrame extends JFrame {
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
+    // ==========================================
+    // SUMMARY CARDS
+    // ==========================================
+
     private JLabel createSummaryValue() {
 
         JLabel label = new JLabel("0");
-        label.setFont(new Font("Segoe UI", Font.BOLD, 27));
+        label.setFont(new Font("Georgia", Font.BOLD, 27));
         label.setForeground(BURGUNDY);
 
         return label;
@@ -354,22 +428,15 @@ public class ManageReturnRequestsFrame extends JFrame {
             String description
     ) {
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(WHITE);
-
-        card.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(230, 220, 210)
-                        ),
-                        BorderFactory.createEmptyBorder(15, 17, 15, 17)
-                )
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(
+                new BoxLayout(textPanel, BoxLayout.Y_AXIS)
         );
+        textPanel.setOpaque(false);
 
         JLabel headingLabel = new JLabel(heading);
         headingLabel.setFont(
-                new Font("Segoe UI", Font.BOLD, 11)
+                new Font("Georgia", Font.BOLD, 11)
         );
         headingLabel.setForeground(MUTED);
 
@@ -379,14 +446,42 @@ public class ManageReturnRequestsFrame extends JFrame {
         );
         descriptionLabel.setForeground(MUTED);
 
-        card.add(headingLabel);
-        card.add(Box.createVerticalStrut(8));
-        card.add(valueLabel);
-        card.add(Box.createVerticalStrut(4));
-        card.add(descriptionLabel);
+        textPanel.add(headingLabel);
+        textPanel.add(Box.createVerticalStrut(8));
+        textPanel.add(valueLabel);
+        textPanel.add(Box.createVerticalStrut(4));
+        textPanel.add(descriptionLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(
+                new Font("Georgia", Font.BOLD, 48)
+        );
+        decoration.setForeground(
+                new Color(225, 211, 185)
+        );
+
+        JPanel cardContent = new JPanel(new BorderLayout());
+        cardContent.setOpaque(false);
+        cardContent.add(textPanel, BorderLayout.CENTER);
+        cardContent.add(decoration, BorderLayout.EAST);
+
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(WHITE);
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(15, 17, 15, 17)
+                )
+        );
+
+        card.add(cardContent, BorderLayout.CENTER);
 
         return card;
     }
+
+    // ==========================================
+    // BUTTON DESIGN
+    // ==========================================
 
     private JButton createButton(
             String text,
@@ -406,41 +501,61 @@ public class ManageReturnRequestsFrame extends JFrame {
             Color foreground
     ) {
 
-        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setBackground(background);
         button.setForeground(foreground);
         button.setFocusPainted(false);
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.setBorderPainted(true);
+        button.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
         button.setOpaque(true);
+
         button.setBorder(
-                BorderFactory.createEmptyBorder(10, 16, 10, 16)
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(GOLD, 1),
+                        new EmptyBorder(9, 15, 9, 15)
+                )
         );
     }
 
+    // ==========================================
+    // TABLE DESIGN
+    // ==========================================
+
     private void styleTable() {
 
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         table.setForeground(TEXT);
         table.setBackground(WHITE);
-        table.setRowHeight(34);
+        table.setRowHeight(38);
+
         table.setShowVerticalLines(false);
         table.setShowHorizontalLines(true);
-        table.setGridColor(new Color(240, 235, 230));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(new Color(245, 231, 207));
-        table.setSelectionForeground(BURGUNDY);
-        table.setFillsViewportHeight(true);
-        table.setAutoCreateRowSorter(true);
+        table.setGridColor(BORDER);
 
-        table.getTableHeader().setFont(
-                new Font("Segoe UI", Font.BOLD, 12)
+        table.setSelectionMode(
+                ListSelectionModel.SINGLE_SELECTION
         );
-        table.getTableHeader().setBackground(BURGUNDY);
-        table.getTableHeader().setForeground(WHITE);
-        table.getTableHeader().setPreferredSize(
-                new Dimension(0, 40)
-        );
-        table.getTableHeader().setReorderingAllowed(false);
+
+        table.setSelectionBackground(LIGHT_GOLD);
+        table.setSelectionForeground(BURGUNDY);
+
+        table.setFillsViewportHeight(true);
+        table.setAutoCreateRowSorter(false);
+
+        // TABLE HEADER
+        // These methods must be called on JTableHeader.
+
+        JTableHeader header = table.getTableHeader();
+
+        header.setFont(new Font("Georgia", Font.BOLD, 11));
+        header.setBackground(BURGUNDY);
+        header.setForeground(WHITE);
+        header.setPreferredSize(new Dimension(0, 42));
+        header.setReorderingAllowed(false);
+
+        // TABLE CELL RENDERER
 
         DefaultTableCellRenderer renderer =
                 new DefaultTableCellRenderer() {
@@ -466,21 +581,23 @@ public class ManageReturnRequestsFrame extends JFrame {
                                 );
 
                         if (isSelected) {
-                            component.setBackground(
-                                    new Color(245, 231, 207)
-                            );
+                            component.setBackground(LIGHT_GOLD);
                             component.setForeground(BURGUNDY);
                         } else {
+
                             component.setBackground(
                                     row % 2 == 0
                                             ? WHITE
                                             : new Color(250, 248, 244)
                             );
+
                             component.setForeground(TEXT);
                         }
 
                         setBorder(
-                                BorderFactory.createEmptyBorder(0, 8, 0, 8)
+                                BorderFactory.createEmptyBorder(
+                                        0, 8, 0, 8
+                                )
                         );
 
                         return component;
@@ -488,10 +605,13 @@ public class ManageReturnRequestsFrame extends JFrame {
                 };
 
         for (int i = 0; i < table.getColumnCount(); i++) {
+
             table.getColumnModel()
                     .getColumn(i)
                     .setCellRenderer(renderer);
         }
+
+        // COLUMN WIDTHS
 
         table.getColumnModel().getColumn(0).setPreferredWidth(80);
         table.getColumnModel().getColumn(1).setPreferredWidth(100);
@@ -504,7 +624,10 @@ public class ManageReturnRequestsFrame extends JFrame {
         table.getColumnModel().getColumn(8).setPreferredWidth(115);
     }
 
+    // ==========================================
     // LOAD ALL PENDING RETURN REQUESTS
+    // ==========================================
+
     private void loadPendingRequests() {
 
         tableModel.setRowCount(0);
@@ -559,6 +682,10 @@ public class ManageReturnRequestsFrame extends JFrame {
         }
     }
 
+    // ==========================================
+    // CHECK TODAY'S REQUESTS
+    // ==========================================
+
     private boolean isToday(String dateText, LocalDate today) {
 
         if (dateText == null || dateText.trim().isEmpty()) {
@@ -566,6 +693,7 @@ public class ManageReturnRequestsFrame extends JFrame {
         }
 
         try {
+
             LocalDate requestDate = LocalDate.parse(
                     dateText.substring(0, 10),
                     DateTimeFormatter.ISO_LOCAL_DATE
@@ -573,21 +701,31 @@ public class ManageReturnRequestsFrame extends JFrame {
 
             return requestDate.equals(today);
 
-        } catch (DateTimeParseException | IndexOutOfBoundsException e) {
+        } catch (DateTimeParseException
+                 | IndexOutOfBoundsException e) {
+
             return false;
         }
     }
 
+    // ==========================================
+    // UPDATE DISPLAYED COUNT
+    // ==========================================
+
     private void updateDisplayedCount() {
 
         if (displayedValue != null && table != null) {
+
             displayedValue.setText(
                     String.valueOf(table.getRowCount())
             );
         }
     }
 
+    // ==========================================
     // GET SELECTED REQUEST ID
+    // ==========================================
+
     private Integer getSelectedRequestId() {
 
         int selectedRow = table.getSelectedRow();
@@ -613,7 +751,10 @@ public class ManageReturnRequestsFrame extends JFrame {
         );
     }
 
+    // ==========================================
     // VIEW SELECTED REQUEST DETAILS
+    // ==========================================
+
     private void viewSelectedRequest() {
 
         Integer requestId = getSelectedRequestId();
@@ -638,37 +779,104 @@ public class ManageReturnRequestsFrame extends JFrame {
                 "Request Date"
         };
 
-        JPanel detailsPanel = new JPanel(new GridLayout(0, 2, 12, 12));
+        JPanel detailsPanel = new JPanel(
+                new GridLayout(0, 2, 12, 14)
+        );
+
         detailsPanel.setBackground(WHITE);
         detailsPanel.setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+                new EmptyBorder(22, 25, 22, 25)
         );
 
         for (int i = 0; i < labels.length; i++) {
 
             JLabel nameLabel = new JLabel(labels[i] + ":");
-            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            nameLabel.setFont(
+                    new Font("Georgia", Font.BOLD, 12)
+            );
             nameLabel.setForeground(BURGUNDY);
 
             JLabel valueLabel = new JLabel(
-                    String.valueOf(tableModel.getValueAt(modelRow, i))
+                    String.valueOf(
+                            tableModel.getValueAt(modelRow, i)
+                    )
             );
-            valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+            valueLabel.setFont(
+                    new Font("Segoe UI", Font.PLAIN, 13)
+            );
             valueLabel.setForeground(TEXT);
 
             detailsPanel.add(nameLabel);
             detailsPanel.add(valueLabel);
         }
 
-        JOptionPane.showMessageDialog(
-                this,
-                detailsPanel,
-                "Return Request Details - #" + requestId,
-                JOptionPane.INFORMATION_MESSAGE
+        JPanel heading = new JPanel();
+        heading.setLayout(
+                new BoxLayout(heading, BoxLayout.Y_AXIS)
         );
+        heading.setBackground(BURGUNDY);
+        heading.setBorder(
+                new EmptyBorder(18, 22, 18, 22)
+        );
+
+        JLabel title = new JLabel("RETURN REQUEST DETAILS");
+        title.setFont(
+                new Font("Georgia", Font.BOLD, 18)
+        );
+        title.setForeground(GOLD);
+
+        JLabel subtitle = new JLabel(
+                "Review the student's return request information."
+        );
+        subtitle.setFont(
+                new Font("Segoe UI", Font.PLAIN, 12)
+        );
+        subtitle.setForeground(CREAM);
+
+        heading.add(title);
+        heading.add(Box.createVerticalStrut(5));
+        heading.add(subtitle);
+
+        JDialog dialog = new JDialog(
+                this,
+                "Return Request Details - #" + requestId,
+                true
+        );
+
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(CREAM);
+
+        JButton closeButton = createButton(
+                "CLOSE",
+                BURGUNDY,
+                WHITE
+        );
+
+        closeButton.addActionListener(
+                e -> dialog.dispose()
+        );
+
+        JPanel footer = new JPanel(
+                new FlowLayout(FlowLayout.RIGHT, 15, 12)
+        );
+        footer.setBackground(CREAM);
+        footer.add(closeButton);
+
+        dialog.add(heading, BorderLayout.NORTH);
+        dialog.add(detailsPanel, BorderLayout.CENTER);
+        dialog.add(footer, BorderLayout.SOUTH);
+
+        dialog.setSize(580, 540);
+        dialog.setMinimumSize(new Dimension(520, 480));
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
+    // ==========================================
     // APPROVE RETURN REQUEST
+    // ==========================================
+
     private void approveSelectedRequest() {
 
         Integer requestId = getSelectedRequestId();
@@ -737,7 +945,10 @@ public class ManageReturnRequestsFrame extends JFrame {
         }
     }
 
+    // ==========================================
     // REJECT RETURN REQUEST
+    // ==========================================
+
     private void rejectSelectedRequest() {
 
         Integer requestId = getSelectedRequestId();
@@ -746,18 +957,58 @@ public class ManageReturnRequestsFrame extends JFrame {
             return;
         }
 
-        String reason = JOptionPane.showInputDialog(
-                this,
-                "Enter the reason for rejecting this return request:",
-                "Reject Return Request",
-                JOptionPane.QUESTION_MESSAGE
+        JTextArea reasonArea = new JTextArea(5, 30);
+        reasonArea.setFont(
+                new Font("Segoe UI", Font.PLAIN, 13)
+        );
+        reasonArea.setForeground(TEXT);
+        reasonArea.setBackground(WHITE);
+        reasonArea.setLineWrap(true);
+        reasonArea.setWrapStyleWord(true);
+        reasonArea.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(8, 8, 8, 8)
+                )
         );
 
-        if (reason == null) {
+        JPanel reasonPanel = new JPanel(
+                new BorderLayout(0, 10)
+        );
+        reasonPanel.setBackground(CREAM);
+        reasonPanel.setBorder(
+                new EmptyBorder(5, 5, 5, 5)
+        );
+
+        JLabel prompt = new JLabel(
+                "Enter the reason for rejecting this return request:"
+        );
+        prompt.setFont(
+                new Font("Georgia", Font.BOLD, 12)
+        );
+        prompt.setForeground(BURGUNDY);
+
+        JScrollPane reasonScroll = new JScrollPane(reasonArea);
+        reasonScroll.setBorder(
+                BorderFactory.createLineBorder(BORDER)
+        );
+
+        reasonPanel.add(prompt, BorderLayout.NORTH);
+        reasonPanel.add(reasonScroll, BorderLayout.CENTER);
+
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                reasonPanel,
+                "Reject Return Request",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (choice != JOptionPane.OK_OPTION) {
             return;
         }
 
-        reason = reason.trim();
+        String reason = reasonArea.getText().trim();
 
         if (reason.isEmpty()) {
 

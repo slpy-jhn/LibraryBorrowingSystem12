@@ -28,15 +28,19 @@ public class ManageBorrowRequestsFrame extends JFrame {
     private JLabel booksValue;
     private JLabel durationValue;
 
-    private final Color BURGUNDY = new Color(91, 28, 43);
-    private final Color DARK_BURGUNDY = new Color(65, 18, 31);
-    private final Color GOLD = new Color(205, 164, 82);
-    private final Color CREAM = new Color(250, 247, 240);
-    private final Color WHITE = Color.WHITE;
-    private final Color TEXT_DARK = new Color(55, 45, 43);
-    private final Color TEXT_GRAY = new Color(125, 116, 110);
-    private final Color GREEN = new Color(48, 125, 85);
-    private final Color RED = new Color(175, 57, 57);
+    // LibraryLink Theme
+    private final Color BURGUNDY = new Color(75, 20, 36);
+    private final Color DARK_BURGUNDY = new Color(55, 13, 27);
+    private final Color GOLD = new Color(176, 141, 87);
+    private final Color CREAM = new Color(243, 235, 221);
+    private final Color WHITE = new Color(255, 252, 245);
+    private final Color TEXT_DARK = new Color(53, 37, 31);
+    private final Color TEXT_GRAY = new Color(130, 115, 103);
+    private final Color BORDER = new Color(222, 210, 191);
+    private final Color LIGHT_GOLD = new Color(244, 232, 207);
+
+    private final Color GREEN = new Color(38, 125, 82);
+    private final Color RED = new Color(175, 55, 55);
 
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("MMMM dd, yyyy");
@@ -82,14 +86,14 @@ public class ManageBorrowRequestsFrame extends JFrame {
         );
 
         JLabel title = new JLabel("Manage Borrowing Requests");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 27));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 27));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "Review, approve, and manage student borrowing requests."
         );
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        subtitle.setForeground(new Color(235, 218, 207));
+        subtitle.setForeground(new Color(243, 235, 221));
 
         titlePanel.add(title);
         titlePanel.add(Box.createVerticalStrut(6));
@@ -101,7 +105,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
         rightPanel.setOpaque(false);
 
         JLabel sectionLabel = new JLabel("ADMINISTRATION");
-        sectionLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        sectionLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         sectionLabel.setForeground(GOLD);
 
         rightPanel.add(sectionLabel);
@@ -129,7 +133,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
         );
 
         JLabel overviewTitle = new JLabel("Request Overview");
-        overviewTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        overviewTitle.setFont(new Font("Georgia", Font.BOLD, 17));
         overviewTitle.setForeground(BURGUNDY);
         overviewTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -140,19 +144,31 @@ public class ManageBorrowRequestsFrame extends JFrame {
         statsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         statsPanel.add(createStatCard(
-                "Pending Requests", "0", "Awaiting admin decision", 1
+                "Pending Requests",
+                "0",
+                "Awaiting admin decision",
+                1
         ));
 
         statsPanel.add(createStatCard(
-                "Requests Today", "0", "Submitted today", 2
+                "Requests Today",
+                "0",
+                "Submitted today",
+                2
         ));
 
         statsPanel.add(createStatCard(
-                "Books Requested", "0", "Total requested copies", 3
+                "Books Requested",
+                "0",
+                "Total requested copies",
+                3
         ));
 
         statsPanel.add(createStatCard(
-                "Average Duration", "0", "Requested days", 4
+                "Average Duration",
+                "0",
+                "Requested days",
+                4
         ));
 
         topContent.add(overviewTitle);
@@ -165,9 +181,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
         tableCard.setBackground(WHITE);
         tableCard.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(232, 225, 216)
-                        ),
+                        BorderFactory.createLineBorder(BORDER),
                         new EmptyBorder(18, 18, 18, 18)
                 )
         );
@@ -176,7 +190,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
         tableHeading.setOpaque(false);
 
         JLabel tableTitle = new JLabel("Pending Request Directory");
-        tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        tableTitle.setFont(new Font("Georgia", Font.BOLD, 17));
         tableTitle.setForeground(BURGUNDY);
 
         JLabel tableSubtitle = new JLabel(
@@ -201,9 +215,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(requestTable);
         scrollPane.setBorder(
-                BorderFactory.createLineBorder(
-                        new Color(230, 225, 218)
-                )
+                BorderFactory.createLineBorder(BORDER)
         );
         scrollPane.getViewport().setBackground(WHITE);
 
@@ -235,19 +247,21 @@ public class ManageBorrowRequestsFrame extends JFrame {
             int cardNumber
     ) {
 
-        JPanel card = new JPanel();
+        JPanel card = new JPanel(new BorderLayout());
         card.setBackground(WHITE);
-        card.setLayout(
-                new BoxLayout(card, BoxLayout.Y_AXIS)
-        );
+
         card.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(235, 229, 221)
-                        ),
+                        BorderFactory.createLineBorder(BORDER, 1),
                         new EmptyBorder(17, 19, 17, 19)
                 )
         );
+
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(
+                new BoxLayout(textPanel, BoxLayout.Y_AXIS)
+        );
+        textPanel.setOpaque(false);
 
         JPanel accent = new JPanel();
         accent.setBackground(GOLD);
@@ -256,12 +270,12 @@ public class ManageBorrowRequestsFrame extends JFrame {
         accent.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        titleLabel.setFont(new Font("Georgia", Font.BOLD, 11));
         titleLabel.setForeground(TEXT_GRAY);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 29));
+        valueLabel.setFont(new Font("Georgia", Font.BOLD, 27));
         valueLabel.setForeground(BURGUNDY);
         valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -277,13 +291,24 @@ public class ManageBorrowRequestsFrame extends JFrame {
             case 4 -> durationValue = valueLabel;
         }
 
-        card.add(accent);
-        card.add(Box.createVerticalStrut(11));
-        card.add(titleLabel);
-        card.add(Box.createVerticalStrut(7));
-        card.add(valueLabel);
-        card.add(Box.createVerticalStrut(5));
-        card.add(descriptionLabel);
+        textPanel.add(accent);
+        textPanel.add(Box.createVerticalStrut(11));
+        textPanel.add(titleLabel);
+        textPanel.add(Box.createVerticalStrut(7));
+        textPanel.add(valueLabel);
+        textPanel.add(Box.createVerticalStrut(5));
+        textPanel.add(descriptionLabel);
+
+        JLabel decoration = new JLabel("L");
+        decoration.setFont(new Font("Georgia", Font.BOLD, 48));
+        decoration.setForeground(new Color(225, 211, 185));
+
+        JPanel cardContent = new JPanel(new BorderLayout());
+        cardContent.setOpaque(false);
+        cardContent.add(textPanel, BorderLayout.CENTER);
+        cardContent.add(decoration, BorderLayout.EAST);
+
+        card.add(cardContent, BorderLayout.CENTER);
 
         return card;
     }
@@ -301,20 +326,22 @@ public class ManageBorrowRequestsFrame extends JFrame {
         searchPanel.setBackground(WHITE);
         searchPanel.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(225, 218, 209)
-                        ),
+                        BorderFactory.createLineBorder(BORDER),
                         new EmptyBorder(5, 10, 5, 10)
                 )
         );
 
         JLabel searchIcon = new JLabel("SEARCH");
-        searchIcon.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        searchIcon.setFont(new Font("Georgia", Font.BOLD, 10));
         searchIcon.setForeground(TEXT_GRAY);
 
         searchField = new JTextField();
         searchField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        searchField.setBorder(BorderFactory.createEmptyBorder(7, 5, 7, 5));
+        searchField.setForeground(TEXT_DARK);
+        searchField.setBackground(WHITE);
+        searchField.setBorder(
+                BorderFactory.createEmptyBorder(7, 5, 7, 5)
+        );
         searchField.setToolTipText(
                 "Search request ID, student name, student ID, or book title"
         );
@@ -394,29 +421,30 @@ public class ManageBorrowRequestsFrame extends JFrame {
         requestTable = new JTable(tableModel);
 
         requestTable.setFont(
-                new Font("Segoe UI", Font.PLAIN, 12)
+                new Font("Segoe UI", Font.PLAIN, 13)
         );
         requestTable.setForeground(TEXT_DARK);
         requestTable.setBackground(WHITE);
-        requestTable.setRowHeight(38);
+        requestTable.setRowHeight(40);
+
         requestTable.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION
         );
+
         requestTable.setShowVerticalLines(false);
         requestTable.setShowHorizontalLines(true);
-        requestTable.setGridColor(new Color(238, 234, 228));
+        requestTable.setGridColor(BORDER);
         requestTable.setFillsViewportHeight(true);
         requestTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        requestTable.setSelectionBackground(
-                new Color(246, 235, 216)
-        );
-        requestTable.setSelectionForeground(BURGUNDY);
+
+        requestTable.setSelectionBackground(LIGHT_GOLD);
+        requestTable.setSelectionForeground(TEXT_DARK);
 
         JTableHeader header = requestTable.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        header.setFont(new Font("Georgia", Font.BOLD, 11));
         header.setBackground(BURGUNDY);
         header.setForeground(WHITE);
-        header.setPreferredSize(new Dimension(100, 42));
+        header.setPreferredSize(new Dimension(100, 43));
         header.setReorderingAllowed(false);
 
         int[] widths = {
@@ -455,7 +483,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
 
         JButton detailsButton = createButton(
                 "VIEW DETAILS",
-                new Color(105, 91, 75)
+                BURGUNDY
         );
 
         JButton rejectButton = createButton(
@@ -495,18 +523,18 @@ public class ManageBorrowRequestsFrame extends JFrame {
 
         JButton button = new JButton(text);
 
-        button.setFont(
-                new Font("Segoe UI", Font.BOLD, 11)
-        );
+        button.setFont(new Font("Georgia", Font.BOLD, 11));
         button.setBackground(color);
         button.setForeground(WHITE);
         button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setCursor(
-                new Cursor(Cursor.HAND_CURSOR)
-        );
+        button.setBorderPainted(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         button.setBorder(
-                new EmptyBorder(11, 17, 11, 17)
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(GOLD, 1),
+                        new EmptyBorder(10, 16, 10, 16)
+                )
         );
 
         return button;
@@ -579,7 +607,6 @@ public class ManageBorrowRequestsFrame extends JFrame {
             durationValue.setText(average + " days");
 
             if (requests.isEmpty()) {
-                // Keep the empty table visible without interrupting the admin.
                 requestTable.clearSelection();
             }
 
@@ -766,14 +793,14 @@ public class ManageBorrowRequestsFrame extends JFrame {
         );
 
         JLabel title = new JLabel("BORROWING REQUEST DETAILS");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 19));
-        title.setForeground(WHITE);
+        title.setFont(new Font("Georgia", Font.BOLD, 19));
+        title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "Review the student's borrowing information."
         );
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        subtitle.setForeground(new Color(235, 218, 207));
+        subtitle.setForeground(new Color(243, 235, 221));
 
         heading.add(title);
         heading.add(Box.createVerticalStrut(5));
@@ -818,7 +845,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
     ) {
 
         JLabel labelText = new JLabel(label);
-        labelText.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        labelText.setFont(new Font("Georgia", Font.BOLD, 12));
         labelText.setForeground(TEXT_GRAY);
 
         JLabel valueText = new JLabel(
@@ -826,7 +853,7 @@ public class ManageBorrowRequestsFrame extends JFrame {
                         + escapeHtml(value)
                         + "</body></html>"
         );
-        valueText.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        valueText.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         valueText.setForeground(TEXT_DARK);
 
         panel.add(labelText);
@@ -897,7 +924,6 @@ public class ManageBorrowRequestsFrame extends JFrame {
 
             session.requireAdmin();
 
-            // Uses the exact date saved by the student.
             BorrowRequestService.approveRequest(
                     session,
                     requestId
@@ -956,19 +982,20 @@ public class ManageBorrowRequestsFrame extends JFrame {
 
         JTextArea reasonArea = new JTextArea(5, 30);
         reasonArea.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        reasonArea.setForeground(TEXT_DARK);
+        reasonArea.setBackground(WHITE);
         reasonArea.setLineWrap(true);
         reasonArea.setWrapStyleWord(true);
         reasonArea.setBorder(
                 BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(220, 210, 200)
-                        ),
+                        BorderFactory.createLineBorder(BORDER),
                         new EmptyBorder(8, 8, 8, 8)
                 )
         );
 
         JPanel reasonPanel = new JPanel(new BorderLayout(0, 10));
         reasonPanel.setBackground(CREAM);
+        reasonPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
         JLabel prompt = new JLabel(
                 "<html>Reject request from <b>"
@@ -979,9 +1006,13 @@ public class ManageBorrowRequestsFrame extends JFrame {
                         + "Please provide a reason:</html>"
         );
         prompt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        prompt.setForeground(TEXT_DARK);
+
+        JScrollPane reasonScroll = new JScrollPane(reasonArea);
+        reasonScroll.setBorder(BorderFactory.createLineBorder(BORDER));
 
         reasonPanel.add(prompt, BorderLayout.NORTH);
-        reasonPanel.add(new JScrollPane(reasonArea), BorderLayout.CENTER);
+        reasonPanel.add(reasonScroll, BorderLayout.CENTER);
 
         int choice = JOptionPane.showConfirmDialog(
                 this,
