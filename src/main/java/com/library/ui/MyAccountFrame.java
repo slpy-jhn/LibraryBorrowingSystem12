@@ -4,6 +4,7 @@ package com.library.ui;
 import com.library.database.DatabaseConnection;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class MyAccountFrame extends JFrame {
+
+    private static final Color BURGUNDY = new Color(92, 20, 38);
+    private static final Color GOLD = new Color(205, 166, 82);
+    private static final Color CREAM = new Color(248, 245, 238);
+    private static final Color WHITE = Color.WHITE;
+    private static final Color TEXT = new Color(55, 48, 48);
+    private static final Color MUTED = new Color(125, 116, 112);
+    private static final Color BORDER = new Color(229, 222, 211);
 
     private final int memberId;
 
@@ -26,55 +35,78 @@ public class MyAccountFrame extends JFrame {
 
         this.memberId = memberId;
 
-        setTitle("My Account");
-        setSize(650, 600);
-        setLocationRelativeTo(null);
+        setTitle("LibraryLink - My Account");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setMinimumSize(new Dimension(650, 650));
+        setSize(850, 750);
+        setLocationRelativeTo(null);
 
-        getContentPane().setBackground(
-                new Color(245, 247, 250)
-        );
+        getContentPane().setBackground(CREAM);
+        setLayout(new BorderLayout());
 
-        setLayout(new BorderLayout(15, 15));
+        createHeader();
+        createAccountInformation();
+        createFooter();
 
-        // HEADER
+        loadAccountInformation();
+    }
+
+    private void createHeader() {
+
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(BURGUNDY);
+        header.setBorder(new EmptyBorder(25, 30, 25, 30));
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setOpaque(false);
+
         JLabel titleLabel = new JLabel("My Account");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 27));
+        titleLabel.setForeground(WHITE);
 
-        titleLabel.setFont(
-                new Font("Segoe UI", Font.BOLD, 26)
+        JLabel subtitleLabel = new JLabel(
+                "View your registered library membership information"
         );
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitleLabel.setForeground(new Color(235, 218, 211));
 
-        titleLabel.setForeground(
-                new Color(23, 43, 77)
-        );
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createVerticalStrut(6));
+        titlePanel.add(subtitleLabel);
 
-        titleLabel.setBorder(
-                BorderFactory.createEmptyBorder(20, 25, 5, 25)
-        );
+        JButton closeButton = createButton("Close", BURGUNDY, WHITE);
+        closeButton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD, 1),
+                new EmptyBorder(8, 18, 8, 18)
+        ));
+        closeButton.addActionListener(e -> dispose());
 
-        add(titleLabel, BorderLayout.NORTH);
+        header.add(titlePanel, BorderLayout.CENTER);
+        header.add(closeButton, BorderLayout.EAST);
 
-        // ACCOUNT INFORMATION PANEL
-        JPanel informationPanel = new JPanel(
-                new GridBagLayout()
-        );
+        add(header, BorderLayout.NORTH);
+    }
 
-        informationPanel.setBackground(Color.WHITE);
+    private void createAccountInformation() {
 
-        informationPanel.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(220, 225, 232)
-                        ),
-                        BorderFactory.createEmptyBorder(
-                                25, 30, 25, 30
-                        )
-                )
-        );
+        JPanel outerPanel = new JPanel(new BorderLayout());
+        outerPanel.setBackground(CREAM);
+        outerPanel.setBorder(new EmptyBorder(25, 30, 25, 30));
+
+        JPanel informationPanel = new JPanel(new GridBagLayout());
+        informationPanel.setBackground(WHITE);
+        informationPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(25, 30, 25, 30)
+        ));
+
+        JLabel sectionTitle = new JLabel("Membership Information");
+        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 19));
+        sectionTitle.setForeground(BURGUNDY);
 
         GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.insets = new Insets(12, 10, 12, 10);
+        gbc.insets = new Insets(13, 10, 13, 10);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
@@ -87,92 +119,81 @@ public class MyAccountFrame extends JFrame {
         statusValue = createValueLabel();
 
         addInformationRow(
-                informationPanel, gbc, 0,
-                "Full Name:", nameValue
-        );
-
-        addInformationRow(
                 informationPanel, gbc, 1,
-                "Student/Employee ID:", studentIdValue
+                "Full Name", nameValue
         );
 
         addInformationRow(
                 informationPanel, gbc, 2,
-                "Course/Department:", departmentValue
+                "Student / Employee ID", studentIdValue
         );
 
         addInformationRow(
                 informationPanel, gbc, 3,
-                "Contact Number:", contactValue
+                "Course / Department", departmentValue
         );
 
         addInformationRow(
                 informationPanel, gbc, 4,
-                "Email Address:", emailValue
+                "Contact Number", contactValue
         );
 
         addInformationRow(
                 informationPanel, gbc, 5,
-                "Registration Date:", registrationValue
+                "Email Address", emailValue
         );
 
         addInformationRow(
                 informationPanel, gbc, 6,
-                "Membership Status:", statusValue
+                "Registration Date", registrationValue
         );
 
-        JPanel centerPanel = new JPanel(
-                new BorderLayout()
+        addInformationRow(
+                informationPanel, gbc, 7,
+                "Membership Status", statusValue
         );
 
-        centerPanel.setBackground(
-                new Color(245, 247, 250)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(0, 10, 18, 10);
+        informationPanel.add(sectionTitle, gbc);
+
+        outerPanel.add(informationPanel, BorderLayout.NORTH);
+
+        add(outerPanel, BorderLayout.CENTER);
+    }
+
+    private void createFooter() {
+
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setBackground(CREAM);
+        footer.setBorder(new EmptyBorder(0, 30, 22, 30));
+
+        JLabel footerLabel = new JLabel(
+                "LibraryLink  |  Student Membership Profile"
+        );
+        footerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        footerLabel.setForeground(MUTED);
+
+        JButton refreshButton = createButton(
+                "Refresh Information", BURGUNDY, WHITE
         );
 
-        centerPanel.setBorder(
-                BorderFactory.createEmptyBorder(10, 25, 10, 25)
-        );
+        refreshButton.addActionListener(e -> loadAccountInformation());
 
-        centerPanel.add(
-                informationPanel,
-                BorderLayout.CENTER
-        );
+        footer.add(footerLabel, BorderLayout.WEST);
+        footer.add(refreshButton, BorderLayout.EAST);
 
-        add(centerPanel, BorderLayout.CENTER);
-
-        // BOTTOM PANEL
-        JPanel bottomPanel = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT, 15, 15)
-        );
-
-        bottomPanel.setBackground(
-                new Color(245, 247, 250)
-        );
-
-        JButton refreshButton = new JButton("Refresh");
-
-        bottomPanel.add(refreshButton);
-
-        add(bottomPanel, BorderLayout.SOUTH);
-
-        refreshButton.addActionListener(e ->
-                loadAccountInformation()
-        );
-
-        loadAccountInformation();
+        add(footer, BorderLayout.SOUTH);
     }
 
     private JLabel createValueLabel() {
 
         JLabel label = new JLabel("-");
 
-        label.setFont(
-                new Font("Segoe UI", Font.PLAIN, 14)
-        );
-
-        label.setForeground(
-                new Color(50, 60, 75)
-        );
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        label.setForeground(TEXT);
 
         return label;
     }
@@ -182,23 +203,18 @@ public class MyAccountFrame extends JFrame {
             GridBagConstraints gbc,
             int row,
             String labelText,
-            JLabel valueLabel
-    ) {
+            JLabel valueLabel) {
 
         gbc.gridy = row;
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(13, 10, 13, 10);
 
         gbc.gridx = 0;
         gbc.weightx = 0.4;
 
         JLabel fieldLabel = new JLabel(labelText);
-
-        fieldLabel.setFont(
-                new Font("Segoe UI", Font.BOLD, 14)
-        );
-
-        fieldLabel.setForeground(
-                new Color(70, 80, 95)
-        );
+        fieldLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        fieldLabel.setForeground(MUTED);
 
         panel.add(fieldLabel, gbc);
 
@@ -208,9 +224,28 @@ public class MyAccountFrame extends JFrame {
         panel.add(valueLabel, gbc);
     }
 
+    private JButton createButton(
+            String text,
+            Color background,
+            Color foreground) {
+
+        JButton button = new JButton(text);
+
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setForeground(foreground);
+        button.setBackground(background);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(new EmptyBorder(10, 18, 10, 18));
+        button.setOpaque(true);
+
+        return button;
+    }
+
     private void loadAccountInformation() {
 
         if (memberId <= 0) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Invalid student account.",
@@ -248,9 +283,7 @@ public class MyAccountFrame extends JFrame {
                 if (result.next()) {
 
                     nameValue.setText(
-                            valueOrDefault(
-                                    result.getString("full_name")
-                            )
+                            valueOrDefault(result.getString("full_name"))
                     );
 
                     studentIdValue.setText(
@@ -272,9 +305,7 @@ public class MyAccountFrame extends JFrame {
                     );
 
                     emailValue.setText(
-                            valueOrDefault(
-                                    result.getString("email")
-                            )
+                            valueOrDefault(result.getString("email"))
                     );
 
                     registrationValue.setText(

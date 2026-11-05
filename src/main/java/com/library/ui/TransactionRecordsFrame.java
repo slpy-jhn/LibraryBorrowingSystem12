@@ -4,7 +4,10 @@ package com.library.ui;
 import com.library.database.DatabaseConnection;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,37 +20,191 @@ public class TransactionRecordsFrame extends JFrame {
     private DefaultTableModel tableModel;
     private JTextField searchField;
     private JComboBox<String> statusFilter;
+    private TableRowSorter<DefaultTableModel> sorter;
+
+    private JLabel totalValue;
+    private JLabel borrowedValue;
+    private JLabel overdueValue;
+    private JLabel returnedValue;
+
+    private static final Color BURGUNDY = new Color(91, 28, 43);
+    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
+    private static final Color GOLD = new Color(205, 164, 82);
+    private static final Color CREAM = new Color(250, 247, 240);
+    private static final Color WHITE = Color.WHITE;
+    private static final Color TEXT = new Color(55, 45, 45);
+    private static final Color MUTED = new Color(125, 115, 110);
+    private static final Color GREEN = new Color(43, 125, 82);
+    private static final Color RED = new Color(174, 55, 55);
+    private static final Color BLUE = new Color(60, 105, 155);
 
     public TransactionRecordsFrame() {
 
         setTitle("Transaction Records");
-        setSize(1100, 600);
+        setSize(1350, 760);
+        setMinimumSize(new Dimension(1000, 600));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout(15, 15));
 
-        getContentPane().setBackground(
-                new Color(245, 247, 250)
+        getContentPane().setBackground(CREAM);
+        setLayout(new BorderLayout());
+
+        buildHeader();
+        buildMainContent();
+        buildBottomPanel();
+
+        loadTransactions("", "ALL");
+    }
+
+    private void buildHeader() {
+
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(BURGUNDY);
+        header.setBorder(
+                BorderFactory.createEmptyBorder(22, 28, 22, 28)
         );
 
-        // HEADER
-        JLabel titleLabel = new JLabel("Transaction Records");
-
-        titleLabel.setFont(
-                new Font("Segoe UI", Font.BOLD, 25)
+        JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
+        titlePanel.setLayout(
+                new BoxLayout(titlePanel, BoxLayout.Y_AXIS)
         );
 
-        titleLabel.setForeground(
-                new Color(23, 43, 77)
+        JLabel title = new JLabel("Transaction Records");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 25));
+        title.setForeground(WHITE);
+
+        JLabel subtitle = new JLabel(
+                "View and monitor the complete borrowing and return history"
+        );
+        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        subtitle.setForeground(new Color(235, 220, 215));
+
+        titlePanel.add(title);
+        titlePanel.add(Box.createVerticalStrut(5));
+        titlePanel.add(subtitle);
+
+        JButton closeButton = new JButton("CLOSE");
+        styleButton(closeButton, WHITE, BURGUNDY);
+
+        closeButton.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(GOLD, 1),
+                        BorderFactory.createEmptyBorder(9, 18, 9, 18)
+                )
         );
 
-        titleLabel.setBorder(
-                BorderFactory.createEmptyBorder(20, 20, 5, 20)
+        closeButton.addActionListener(e -> dispose());
+
+        header.add(titlePanel, BorderLayout.WEST);
+        header.add(closeButton, BorderLayout.EAST);
+
+        add(header, BorderLayout.NORTH);
+    }
+
+    private void buildMainContent() {
+
+        JPanel main = new JPanel(new BorderLayout(0, 18));
+        main.setBackground(CREAM);
+        main.setBorder(
+                BorderFactory.createEmptyBorder(20, 25, 10, 25)
         );
 
-        add(titleLabel, BorderLayout.NORTH);
+        JPanel summaryPanel = new JPanel(
+                new GridLayout(1, 4, 12, 0)
+        );
+        summaryPanel.setOpaque(false);
 
-        // TABLE
+        totalValue = createSummaryValue(BURGUNDY);
+        borrowedValue = createSummaryValue(BLUE);
+        overdueValue = createSummaryValue(RED);
+        returnedValue = createSummaryValue(GREEN);
+
+        summaryPanel.add(createSummaryCard(
+                "TOTAL TRANSACTIONS",
+                totalValue,
+                "All recorded transactions"
+        ));
+
+        summaryPanel.add(createSummaryCard(
+                "BORROWED",
+                borrowedValue,
+                "Currently active loans"
+        ));
+
+        summaryPanel.add(createSummaryCard(
+                "OVERDUE",
+                overdueValue,
+                "Past their due dates"
+        ));
+
+        summaryPanel.add(createSummaryCard(
+                "RETURNED",
+                returnedValue,
+                "Completed returns"
+        ));
+
+        JPanel centerPanel = new JPanel(new BorderLayout(0, 12));
+        centerPanel.setOpaque(false);
+
+        JPanel toolbar = new JPanel(new BorderLayout(10, 0));
+        toolbar.setOpaque(false);
+
+        JLabel sectionTitle = new JLabel("Transaction History");
+        sectionTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        sectionTitle.setForeground(BURGUNDY);
+
+        JPanel filterPanel = new JPanel(new FlowLayout(
+                FlowLayout.RIGHT, 8, 0
+        ));
+        filterPanel.setOpaque(false);
+
+        JLabel searchLabel = new JLabel("Search:");
+        searchLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        searchLabel.setForeground(TEXT);
+
+        searchField = new JTextField(18);
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        searchField.setPreferredSize(new Dimension(190, 36));
+        searchField.setToolTipText(
+                "Search member, Student/Employee ID, or book title"
+        );
+
+        searchField.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(220, 210, 200)
+                        ),
+                        BorderFactory.createEmptyBorder(7, 10, 7, 10)
+                )
+        );
+
+        JLabel statusLabel = new JLabel("Status:");
+        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        statusLabel.setForeground(TEXT);
+
+        statusFilter = new JComboBox<>(new String[]{
+                "ALL",
+                "BORROWED",
+                "OVERDUE",
+                "RETURNED"
+        });
+
+        statusFilter.setFont(
+                new Font("Segoe UI", Font.BOLD, 11)
+        );
+        statusFilter.setPreferredSize(new Dimension(125, 36));
+        statusFilter.setBackground(WHITE);
+        statusFilter.setForeground(BURGUNDY);
+
+        filterPanel.add(searchLabel);
+        filterPanel.add(searchField);
+        filterPanel.add(statusLabel);
+        filterPanel.add(statusFilter);
+
+        toolbar.add(sectionTitle, BorderLayout.WEST);
+        toolbar.add(filterPanel, BorderLayout.EAST);
+
         String[] columns = {
                 "Transaction ID",
                 "Member Name",
@@ -65,77 +222,91 @@ public class TransactionRecordsFrame extends JFrame {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 0
+                        ? Integer.class
+                        : String.class;
+            }
         };
 
         table = new JTable(tableModel);
 
-        table.setRowHeight(30);
+        sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
 
-        table.setFont(
-                new Font("Segoe UI", Font.PLAIN, 12)
-        );
-
-        table.getTableHeader().setFont(
-                new Font("Segoe UI", Font.BOLD, 12)
-        );
+        styleTable();
 
         JScrollPane scrollPane = new JScrollPane(table);
-
         scrollPane.setBorder(
-                BorderFactory.createEmptyBorder(0, 20, 0, 20)
+                BorderFactory.createLineBorder(
+                        new Color(225, 215, 205)
+                )
         );
+        scrollPane.getViewport().setBackground(WHITE);
 
-        add(scrollPane, BorderLayout.CENTER);
-
-        // BOTTOM PANEL
-        JPanel bottomPanel = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 10, 10)
-        );
-
-        bottomPanel.setBackground(
-                new Color(245, 247, 250)
-        );
-
-        bottomPanel.setBorder(
-                BorderFactory.createEmptyBorder(5, 20, 15, 20)
-        );
-
-        searchField = new JTextField(20);
-
-        statusFilter = new JComboBox<>(new String[]{
-                "ALL",
-                "BORROWED",
-                "OVERDUE",
-                "RETURNED"
-        });
-
-        JButton searchButton = new JButton("Search");
-        JButton refreshButton = new JButton("Refresh");
-
-        bottomPanel.add(new JLabel("Search:"));
-        bottomPanel.add(searchField);
-
-        bottomPanel.add(new JLabel("Status:"));
-        bottomPanel.add(statusFilter);
-
-        bottomPanel.add(searchButton);
-        bottomPanel.add(refreshButton);
-
-        add(bottomPanel, BorderLayout.SOUTH);
-
-        // BUTTON ACTIONS
-        searchButton.addActionListener(e ->
-                loadTransactions(
-                        searchField.getText().trim(),
-                        statusFilter.getSelectedItem().toString()
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(WHITE);
+        tablePanel.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(225, 215, 205)
+                        ),
+                        BorderFactory.createEmptyBorder(8, 8, 8, 8)
                 )
         );
 
-        searchField.addActionListener(e ->
-                loadTransactions(
-                        searchField.getText().trim(),
-                        statusFilter.getSelectedItem().toString()
-                )
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+
+        centerPanel.add(toolbar, BorderLayout.NORTH);
+        centerPanel.add(tablePanel, BorderLayout.CENTER);
+
+        main.add(summaryPanel, BorderLayout.NORTH);
+        main.add(centerPanel, BorderLayout.CENTER);
+
+        add(main, BorderLayout.CENTER);
+
+        searchField.getDocument().addDocumentListener(
+                new javax.swing.event.DocumentListener() {
+
+                    private void filter() {
+
+                        String text = searchField.getText().trim();
+
+                        if (text.isEmpty()) {
+                            sorter.setRowFilter(null);
+                        } else {
+                            sorter.setRowFilter(
+                                    RowFilter.regexFilter(
+                                            "(?i)" +
+                                                    java.util.regex.Pattern.quote(text)
+                                    )
+                            );
+                        }
+                    }
+
+                    @Override
+                    public void insertUpdate(
+                            javax.swing.event.DocumentEvent e
+                    ) {
+                        filter();
+                    }
+
+                    @Override
+                    public void removeUpdate(
+                            javax.swing.event.DocumentEvent e
+                    ) {
+                        filter();
+                    }
+
+                    @Override
+                    public void changedUpdate(
+                            javax.swing.event.DocumentEvent e
+                    ) {
+                        filter();
+                    }
+                }
         );
 
         statusFilter.addActionListener(e ->
@@ -144,6 +315,32 @@ public class TransactionRecordsFrame extends JFrame {
                         statusFilter.getSelectedItem().toString()
                 )
         );
+    }
+
+    private void buildBottomPanel() {
+
+        JPanel bottom = new JPanel(
+                new FlowLayout(FlowLayout.RIGHT, 10, 12)
+        );
+
+        bottom.setBackground(CREAM);
+        bottom.setBorder(
+                BorderFactory.createEmptyBorder(5, 25, 12, 25)
+        );
+
+        JButton detailsButton = createButton(
+                "VIEW DETAILS",
+                new Color(100, 90, 85),
+                WHITE
+        );
+
+        JButton refreshButton = createButton(
+                "REFRESH",
+                BURGUNDY,
+                WHITE
+        );
+
+        detailsButton.addActionListener(e -> viewSelectedDetails());
 
         refreshButton.addActionListener(e -> {
             searchField.setText("");
@@ -151,7 +348,229 @@ public class TransactionRecordsFrame extends JFrame {
             loadTransactions("", "ALL");
         });
 
-        loadTransactions("", "ALL");
+        bottom.add(detailsButton);
+        bottom.add(refreshButton);
+
+        add(bottom, BorderLayout.SOUTH);
+    }
+
+    private JLabel createSummaryValue(Color color) {
+
+        JLabel label = new JLabel("0");
+        label.setFont(new Font("Segoe UI", Font.BOLD, 27));
+        label.setForeground(color);
+
+        return label;
+    }
+
+    private JPanel createSummaryCard(
+            String heading,
+            JLabel value,
+            String description
+    ) {
+
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(WHITE);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(230, 220, 210)
+                        ),
+                        BorderFactory.createEmptyBorder(15, 15, 15, 15)
+                )
+        );
+
+        JLabel headingLabel = new JLabel(heading);
+        headingLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        headingLabel.setForeground(MUTED);
+
+        JLabel descriptionLabel = new JLabel(description);
+        descriptionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        descriptionLabel.setForeground(MUTED);
+
+        card.add(headingLabel);
+        card.add(Box.createVerticalStrut(8));
+        card.add(value);
+        card.add(Box.createVerticalStrut(4));
+        card.add(descriptionLabel);
+
+        return card;
+    }
+
+    private JButton createButton(
+            String text,
+            Color background,
+            Color foreground
+    ) {
+
+        JButton button = new JButton(text);
+        styleButton(button, background, foreground);
+
+        return button;
+    }
+
+    private void styleButton(
+            JButton button,
+            Color background,
+            Color foreground
+    ) {
+
+        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
+        button.setBorder(
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)
+        );
+    }
+
+    private void styleTable() {
+
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setForeground(TEXT);
+        table.setBackground(WHITE);
+        table.setRowHeight(36);
+        table.setShowVerticalLines(false);
+        table.setShowHorizontalLines(true);
+        table.setGridColor(new Color(240, 235, 230));
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setSelectionBackground(new Color(245, 231, 207));
+        table.setSelectionForeground(BURGUNDY);
+        table.setFillsViewportHeight(true);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        table.getTableHeader().setFont(
+                new Font("Segoe UI", Font.BOLD, 12)
+        );
+        table.getTableHeader().setBackground(BURGUNDY);
+        table.getTableHeader().setForeground(WHITE);
+        table.getTableHeader().setPreferredSize(
+                new Dimension(0, 40)
+        );
+        table.getTableHeader().setReorderingAllowed(false);
+
+        DefaultTableCellRenderer renderer =
+                new DefaultTableCellRenderer() {
+
+                    @Override
+                    public Component getTableCellRendererComponent(
+                            JTable table,
+                            Object value,
+                            boolean isSelected,
+                            boolean hasFocus,
+                            int row,
+                            int column
+                    ) {
+
+                        Component component =
+                                super.getTableCellRendererComponent(
+                                        table,
+                                        value,
+                                        isSelected,
+                                        hasFocus,
+                                        row,
+                                        column
+                                );
+
+                        if (isSelected) {
+                            component.setBackground(
+                                    new Color(245, 231, 207)
+                            );
+                            component.setForeground(BURGUNDY);
+                        } else {
+                            component.setBackground(
+                                    row % 2 == 0
+                                            ? WHITE
+                                            : new Color(250, 248, 244)
+                            );
+                            component.setForeground(TEXT);
+                        }
+
+                        setBorder(
+                                BorderFactory.createEmptyBorder(0, 8, 0, 8)
+                        );
+
+                        return component;
+                    }
+                };
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel()
+                    .getColumn(i)
+                    .setCellRenderer(renderer);
+        }
+
+        DefaultTableCellRenderer statusRenderer =
+                new DefaultTableCellRenderer() {
+
+                    @Override
+                    public Component getTableCellRendererComponent(
+                            JTable table,
+                            Object value,
+                            boolean isSelected,
+                            boolean hasFocus,
+                            int row,
+                            int column
+                    ) {
+
+                        Component component =
+                                super.getTableCellRendererComponent(
+                                        table,
+                                        value,
+                                        isSelected,
+                                        hasFocus,
+                                        row,
+                                        column
+                                );
+
+                        String status = String.valueOf(value);
+
+                        if (isSelected) {
+                            component.setBackground(
+                                    new Color(245, 231, 207)
+                            );
+                            component.setForeground(BURGUNDY);
+                        } else {
+                            component.setBackground(
+                                    row % 2 == 0
+                                            ? WHITE
+                                            : new Color(250, 248, 244)
+                            );
+
+                            if ("RETURNED".equalsIgnoreCase(status)) {
+                                component.setForeground(GREEN);
+                            } else if ("OVERDUE".equalsIgnoreCase(status)) {
+                                component.setForeground(RED);
+                            } else {
+                                component.setForeground(BLUE);
+                            }
+                        }
+
+                        setHorizontalAlignment(SwingConstants.CENTER);
+                        setFont(new Font("Segoe UI", Font.BOLD, 11));
+
+                        return component;
+                    }
+                };
+
+        table.getColumnModel()
+                .getColumn(7)
+                .setCellRenderer(statusRenderer);
+
+        table.getColumnModel().getColumn(0).setPreferredWidth(105);
+        table.getColumnModel().getColumn(1).setPreferredWidth(170);
+        table.getColumnModel().getColumn(2).setPreferredWidth(155);
+        table.getColumnModel().getColumn(3).setPreferredWidth(210);
+        table.getColumnModel().getColumn(4).setPreferredWidth(130);
+        table.getColumnModel().getColumn(5).setPreferredWidth(130);
+        table.getColumnModel().getColumn(6).setPreferredWidth(130);
+        table.getColumnModel().getColumn(7).setPreferredWidth(110);
     }
 
     private void loadTransactions(String search, String status) {
@@ -242,6 +661,8 @@ public class TransactionRecordsFrame extends JFrame {
                 }
             }
 
+            updateSummaryCards();
+
         } catch (SQLException e) {
 
             JOptionPane.showMessageDialog(
@@ -254,5 +675,95 @@ public class TransactionRecordsFrame extends JFrame {
 
             e.printStackTrace();
         }
+    }
+
+    private void updateSummaryCards() {
+
+        int total = tableModel.getRowCount();
+        int borrowed = 0;
+        int overdue = 0;
+        int returned = 0;
+
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+
+            String status = String.valueOf(
+                    tableModel.getValueAt(i, 7)
+            );
+
+            if ("BORROWED".equalsIgnoreCase(status)) {
+                borrowed++;
+            } else if ("OVERDUE".equalsIgnoreCase(status)) {
+                overdue++;
+            } else if ("RETURNED".equalsIgnoreCase(status)) {
+                returned++;
+            }
+        }
+
+        totalValue.setText(String.valueOf(total));
+        borrowedValue.setText(String.valueOf(borrowed));
+        overdueValue.setText(String.valueOf(overdue));
+        returnedValue.setText(String.valueOf(returned));
+    }
+
+    private void viewSelectedDetails() {
+
+        int selectedRow = table.getSelectedRow();
+
+        if (selectedRow == -1) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a transaction record first.",
+                    "No Record Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+
+        String[] labels = {
+                "Transaction ID",
+                "Member Name",
+                "Student/Employee ID",
+                "Book Title",
+                "Borrowing Date",
+                "Due Date",
+                "Return Date",
+                "Status"
+        };
+
+        JPanel detailsPanel = new JPanel(
+                new GridLayout(0, 2, 12, 12)
+        );
+
+        detailsPanel.setBackground(WHITE);
+        detailsPanel.setBorder(
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        );
+
+        for (int i = 0; i < labels.length; i++) {
+
+            JLabel nameLabel = new JLabel(labels[i] + ":");
+            nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            nameLabel.setForeground(BURGUNDY);
+
+            JLabel valueLabel = new JLabel(
+                    String.valueOf(tableModel.getValueAt(modelRow, i))
+            );
+            valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            valueLabel.setForeground(TEXT);
+
+            detailsPanel.add(nameLabel);
+            detailsPanel.add(valueLabel);
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                detailsPanel,
+                "Transaction Details",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 }

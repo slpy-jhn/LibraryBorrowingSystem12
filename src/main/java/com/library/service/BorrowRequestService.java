@@ -7,7 +7,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,16 +24,102 @@ public class BorrowRequestService {
             String requestDate,
             String status,
             String decisionDate,
-            String rejectionReason
+            String rejectionReason,
+            String requestedReturnDate,
+            int borrowingDuration
     ) {}
+
+    // ==========================================
+    // DATABASE UPGRADE
+    // ==========================================
+
+    /**
+     * Adds the new columns only when they do not already exist.
+     * Existing borrowing requests and transactions are preserved.
+     */
+    private static void ensureRequestColumns(Connection connection)
+            throws SQLException {
+
+        boolean hasReturnDate = false;
+        boolean hasDuration = false;
+
+        String pragmaSql = "PRAGMA table_info(borrow_requests)";
+
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(pragmaSql)) {
+
+            while (result.next()) {
+                String columnName = result.getString("name");
+
+                if ("requested_return_date".equalsIgnoreCase(columnName)) {
+                    hasReturnDate = true;
+                }
+
+                if ("borrowing_duration".equalsIgnoreCase(columnName)) {
+                    hasDuration = true;
+                }
+            }
+        }
+
+        if (!hasReturnDate) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(
+                        "ALTER TABLE borrow_requests " +
+                                "ADD COLUMN requested_return_date TEXT"
+                );
+            }
+        }
+
+        if (!hasDuration) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(
+                        "ALTER TABLE borrow_requests " +
+                                "ADD COLUMN borrowing_duration INTEGER DEFAULT 7"
+                );
+            }
+        }
+    }
 
     // ==========================================
     // STUDENT: SUBMIT BORROWING REQUEST
     // ==========================================
 
+    /**
+     * Compatibility method for existing screens.
+     * Uses seven days as the default borrowing period.
+     */
     public static void submitRequest(
             UserSession session,
             int bookId
+    ) throws SQLException {
+
+        submitRequest(session, bookId, 7);
+    }
+
+    /**
+     * Compatibility method for screens that still submit a duration.
+     */
+    public static void submitRequest(
+            UserSession session,
+            int bookId,
+            int borrowingDays
+    ) throws SQLException {
+
+        validateBorrowingDays(borrowingDays);
+
+        LocalDate requestedReturnDate =
+                LocalDate.now().plusDays(borrowingDays);
+
+        submitRequest(session, bookId, requestedReturnDate);
+    }
+
+    /**
+     * New method: saves the exact return date selected by the student.
+     */
+    public static void submitRequest(
+            UserSession session,
+            int bookId,
+            LocalDate requestedReturnDate
     ) throws SQLException {
 
         if (session == null) {
@@ -43,6 +131,33 @@ public class BorrowRequestService {
         if (bookId <= 0) {
             throw new IllegalArgumentException("Invalid book selection.");
         }
+
+        if (requestedReturnDate == null) {
+            throw new IllegalArgumentException(
+                    "Please select a preferred return date."
+            );
+        }
+
+        LocalDate today = LocalDate.now();
+
+        if (!requestedReturnDate.isAfter(today)) {
+            throw new IllegalArgumentException(
+                    "The requested return date must be after today."
+            );
+        }
+
+        long days = ChronoUnit.DAYS.between(
+                today,
+                requestedReturnDate
+        );
+
+        if (days > 365) {
+            throw new IllegalArgumentException(
+                    "The requested return date cannot be more than 365 days away."
+            );
+        }
+
+        int borrowingDays = (int) days;
 
         String checkSql = """
                 SELECT
@@ -62,21 +177,6 @@ public class BorrowRequestService {
                   AND status = 'PENDING'
                 """;
 
-        String insertSql = """
-                INSERT INTO borrow_requests (
-                    member_id,
-                    book_id,
-                    status,
-                    request_date
-                )
-                VALUES (
-                    ?,
-                    ?,
-                    'PENDING',
-                    datetime('now', 'localtime')
-                )
-                """;
-
         String loanCheckSql = """
                 SELECT COUNT(*)
                 FROM transactions
@@ -85,13 +185,33 @@ public class BorrowRequestService {
                   AND return_date IS NULL
                 """;
 
+        String insertSql = """
+                INSERT INTO borrow_requests (
+                    member_id,
+                    book_id,
+                    status,
+                    request_date,
+                    requested_return_date,
+                    borrowing_duration
+                )
+                VALUES (
+                    ?,
+                    ?,
+                    'PENDING',
+                    datetime('now', 'localtime'),
+                    ?,
+                    ?
+                )
+                """;
+
         try (Connection connection = DatabaseConnection.getConnection()) {
 
+            ensureRequestColumns(connection);
             connection.setAutoCommit(false);
 
             try {
 
-                // Check student and book.
+                // Check student membership and book availability.
                 try (PreparedStatement check =
                              connection.prepareStatement(checkSql)) {
 
@@ -139,7 +259,7 @@ public class BorrowRequestService {
                     }
                 }
 
-                // Check whether a pending request already exists.
+                // Prevent duplicate pending requests.
                 try (PreparedStatement pendingCheck =
                              connection.prepareStatement(pendingCheckSql)) {
 
@@ -156,12 +276,14 @@ public class BorrowRequestService {
                     }
                 }
 
-                // Insert pending request.
+                // Save the exact requested date.
                 try (PreparedStatement insert =
                              connection.prepareStatement(insertSql)) {
 
                     insert.setInt(1, memberId);
                     insert.setInt(2, bookId);
+                    insert.setString(3, requestedReturnDate.toString());
+                    insert.setInt(4, borrowingDays);
 
                     if (insert.executeUpdate() != 1) {
                         throw new SQLException(
@@ -176,7 +298,6 @@ public class BorrowRequestService {
 
                 connection.rollback();
 
-                // Handle duplicate pending request safely.
                 if (e.getErrorCode() == 19 ||
                         (e.getMessage() != null &&
                                 e.getMessage().contains("UNIQUE constraint failed"))) {
@@ -224,7 +345,9 @@ public class BorrowRequestService {
                     r.request_date,
                     r.status,
                     r.decision_date,
-                    r.rejection_reason
+                    r.rejection_reason,
+                    r.requested_return_date,
+                    r.borrowing_duration
                 FROM borrow_requests r
                 JOIN members m ON r.member_id = m.member_id
                 JOIN books b ON r.book_id = b.book_id
@@ -234,26 +357,20 @@ public class BorrowRequestService {
 
         List<BorrowRequest> requests = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
 
-            statement.setInt(1, memberId);
+            ensureRequestColumns(connection);
 
-            try (ResultSet result = statement.executeQuery()) {
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql)) {
 
-                while (result.next()) {
+                statement.setInt(1, memberId);
 
-                    requests.add(new BorrowRequest(
-                            result.getInt("request_id"),
-                            result.getInt("member_id"),
-                            result.getString("full_name"),
-                            result.getInt("book_id"),
-                            result.getString("title"),
-                            result.getString("request_date"),
-                            result.getString("status"),
-                            result.getString("decision_date"),
-                            result.getString("rejection_reason")
-                    ));
+                try (ResultSet result = statement.executeQuery()) {
+
+                    while (result.next()) {
+                        requests.add(mapRequest(result));
+                    }
                 }
             }
         }
@@ -281,7 +398,9 @@ public class BorrowRequestService {
                     r.request_date,
                     r.status,
                     r.decision_date,
-                    r.rejection_reason
+                    r.rejection_reason,
+                    r.requested_return_date,
+                    r.borrowing_duration
                 FROM borrow_requests r
                 JOIN members m ON r.member_id = m.member_id
                 JOIN books b ON r.book_id = b.book_id
@@ -291,23 +410,17 @@ public class BorrowRequestService {
 
         List<BorrowRequest> requests = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet result = statement.executeQuery()) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
 
-            while (result.next()) {
+            ensureRequestColumns(connection);
 
-                requests.add(new BorrowRequest(
-                        result.getInt("request_id"),
-                        result.getInt("member_id"),
-                        result.getString("full_name"),
-                        result.getInt("book_id"),
-                        result.getString("title"),
-                        result.getString("request_date"),
-                        result.getString("status"),
-                        result.getString("decision_date"),
-                        result.getString("rejection_reason")
-                ));
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql);
+                 ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+                    requests.add(mapRequest(result));
+                }
             }
         }
 
@@ -315,13 +428,63 @@ public class BorrowRequestService {
     }
 
     // ==========================================
+    // MAP DATABASE ROW TO BORROW REQUEST
+    // ==========================================
+
+    private static BorrowRequest mapRequest(ResultSet result)
+            throws SQLException {
+
+        return new BorrowRequest(
+                result.getInt("request_id"),
+                result.getInt("member_id"),
+                result.getString("full_name"),
+                result.getInt("book_id"),
+                result.getString("title"),
+                result.getString("request_date"),
+                result.getString("status"),
+                result.getString("decision_date"),
+                result.getString("rejection_reason"),
+                result.getString("requested_return_date"),
+                result.getInt("borrowing_duration")
+        );
+    }
+
+    // ==========================================
     // ADMIN: APPROVE REQUEST
     // ==========================================
 
+    /**
+     * New approval method.
+     * Uses the exact return date saved by the student.
+     */
+    public static void approveRequest(
+            UserSession session,
+            int requestId
+    ) throws SQLException {
+
+        approveRequestInternal(session, requestId, null);
+    }
+
+    /**
+     * Compatibility method for existing admin screens.
+     * If a requested date exists, that date takes priority.
+     * Otherwise, the supplied borrowing duration is used.
+     */
     public static void approveRequest(
             UserSession session,
             int requestId,
             int borrowingDays
+    ) throws SQLException {
+
+        validateBorrowingDays(borrowingDays);
+
+        approveRequestInternal(session, requestId, borrowingDays);
+    }
+
+    private static void approveRequestInternal(
+            UserSession session,
+            int requestId,
+            Integer fallbackBorrowingDays
     ) throws SQLException {
 
         requireAdmin(session);
@@ -330,14 +493,12 @@ public class BorrowRequestService {
             throw new IllegalArgumentException("Invalid request ID.");
         }
 
-        if (borrowingDays <= 0 || borrowingDays > 365) {
-            throw new IllegalArgumentException(
-                    "Borrowing period must be between 1 and 365 days."
-            );
-        }
-
         String requestSql = """
-                SELECT member_id, book_id
+                SELECT
+                    member_id,
+                    book_id,
+                    requested_return_date,
+                    borrowing_duration
                 FROM borrow_requests
                 WHERE request_id = ?
                   AND status = 'PENDING'
@@ -345,14 +506,17 @@ public class BorrowRequestService {
 
         try (Connection connection = DatabaseConnection.getConnection()) {
 
+            ensureRequestColumns(connection);
             connection.setAutoCommit(false);
 
             try {
 
                 int memberId;
                 int bookId;
+                String savedReturnDate;
+                int savedDuration;
 
-                // Retrieve pending request.
+                // Retrieve the pending request and its requested date.
                 try (PreparedStatement statement =
                              connection.prepareStatement(requestSql)) {
 
@@ -368,12 +532,50 @@ public class BorrowRequestService {
 
                         memberId = result.getInt("member_id");
                         bookId = result.getInt("book_id");
+                        savedReturnDate =
+                                result.getString("requested_return_date");
+                        savedDuration =
+                                result.getInt("borrowing_duration");
                     }
+                }
+
+                LocalDate borrowingDate = LocalDate.now();
+                LocalDate dueDate;
+
+                if (savedReturnDate != null &&
+                        !savedReturnDate.isBlank()) {
+
+                    dueDate = LocalDate.parse(savedReturnDate.trim());
+
+                } else {
+
+                    int days;
+
+                    if (fallbackBorrowingDays != null) {
+                        days = fallbackBorrowingDays;
+                    } else if (savedDuration > 0) {
+                        days = savedDuration;
+                    } else {
+                        // Older requests created before this upgrade.
+                        days = 7;
+                    }
+
+                    dueDate = borrowingDate.plusDays(days);
+                }
+
+                if (!dueDate.isAfter(borrowingDate)) {
+                    throw new IllegalStateException(
+                            "The student's requested return date has already passed. " +
+                                    "The request cannot be approved with an expired date. " +
+                                    "Please reject the request and ask the student to submit a new one."
+                    );
                 }
 
                 // Check membership and available copies.
                 String validationSql = """
-                        SELECT m.membership_status, b.available_copies
+                        SELECT
+                            m.membership_status,
+                            b.available_copies
                         FROM members m
                         CROSS JOIN books b
                         WHERE m.member_id = ?
@@ -435,7 +637,7 @@ public class BorrowRequestService {
                     }
                 }
 
-                // Reduce available copies safely.
+                // Reduce available copies.
                 String updateBookSql = """
                         UPDATE books
                         SET available_copies = available_copies - 1
@@ -455,10 +657,7 @@ public class BorrowRequestService {
                     }
                 }
 
-                // Create the actual borrowing transaction.
-                LocalDate borrowingDate = LocalDate.now();
-                LocalDate dueDate = borrowingDate.plusDays(borrowingDays);
-
+                // Create transaction using the requested return date.
                 String transactionSql = """
                         INSERT INTO transactions (
                             member_id,
@@ -478,7 +677,11 @@ public class BorrowRequestService {
                     statement.setString(3, borrowingDate.toString());
                     statement.setString(4, dueDate.toString());
 
-                    statement.executeUpdate();
+                    if (statement.executeUpdate() != 1) {
+                        throw new SQLException(
+                                "Unable to create borrowing transaction."
+                        );
+                    }
                 }
 
                 // Mark request as approved.
@@ -551,23 +754,37 @@ public class BorrowRequestService {
                   AND status = 'PENDING'
                 """;
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
 
-            statement.setString(1, reason.trim());
-            statement.setInt(2, requestId);
+            ensureRequestColumns(connection);
 
-            if (statement.executeUpdate() != 1) {
-                throw new IllegalStateException(
-                        "Request was not found or has already been processed."
-                );
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql)) {
+
+                statement.setString(1, reason.trim());
+                statement.setInt(2, requestId);
+
+                if (statement.executeUpdate() != 1) {
+                    throw new IllegalStateException(
+                            "Request was not found or has already been processed."
+                    );
+                }
             }
         }
     }
 
     // ==========================================
-    // ADMIN ACCESS VALIDATION
+    // VALIDATION HELPERS
     // ==========================================
+
+    private static void validateBorrowingDays(int borrowingDays) {
+
+        if (borrowingDays <= 0 || borrowingDays > 365) {
+            throw new IllegalArgumentException(
+                    "Borrowing period must be between 1 and 365 days."
+            );
+        }
+    }
 
     private static void requireAdmin(UserSession session) {
 
