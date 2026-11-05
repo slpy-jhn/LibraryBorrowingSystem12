@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class BorrowBooksFrame extends JFrame {
 
@@ -20,37 +21,28 @@ public class BorrowBooksFrame extends JFrame {
     private final JTextField borrowingDateField;
     private final JTextField dueDateField;
 
-    private final Color NAVY = new Color(23, 43, 77);
-    private final Color LIGHT_BG = new Color(245, 247, 250);
+    private JLabel memberCountLabel;
+    private JLabel bookCountLabel;
+
+    private static final Color BURGUNDY = new Color(91, 28, 43);
+    private static final Color DARK_BURGUNDY = new Color(65, 18, 31);
+    private static final Color GOLD = new Color(205, 164, 82);
+    private static final Color CREAM = new Color(250, 247, 240);
+    private static final Color WHITE = Color.WHITE;
+    private static final Color TEXT = new Color(55, 45, 45);
+    private static final Color MUTED = new Color(125, 115, 110);
+    private static final Color GREEN = new Color(43, 125, 82);
 
     public BorrowBooksFrame() {
+
         setTitle("Borrow Books");
-        setSize(650, 520);
+        setSize(850, 720);
+        setMinimumSize(new Dimension(700, 620));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        JPanel main = new JPanel(new BorderLayout(15, 15));
-        main.setBackground(LIGHT_BG);
-        main.setBorder(new EmptyBorder(25, 30, 25, 30));
-
-        JLabel heading = new JLabel("Process Book Borrowing");
-        heading.setFont(new Font("Segoe UI", Font.BOLD, 25));
-        heading.setForeground(NAVY);
-
-        JLabel subtitle = new JLabel(
-                "Select a member, book, and borrowing dates."
-        );
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        subtitle.setForeground(Color.GRAY);
-
-        JPanel header = new JPanel();
-        header.setBackground(LIGHT_BG);
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.add(heading);
-        header.add(Box.createVerticalStrut(8));
-        header.add(subtitle);
-
-        main.add(header, BorderLayout.NORTH);
+        getContentPane().setBackground(CREAM);
+        setLayout(new BorderLayout());
 
         memberBox = new JComboBox<>();
         bookBox = new JComboBox<>();
@@ -63,59 +55,358 @@ public class BorrowBooksFrame extends JFrame {
                 LocalDate.now().plusDays(7).toString()
         );
 
-        JPanel form = new JPanel(new GridLayout(0, 1, 8, 8));
-        form.setBackground(Color.WHITE);
-        form.setBorder(new EmptyBorder(25, 25, 25, 25));
-
-        form.add(new JLabel("Select Member:"));
-        form.add(memberBox);
-
-        form.add(new JLabel("Select Available Book:"));
-        form.add(bookBox);
-
-        form.add(new JLabel("Borrowing Date (YYYY-MM-DD):"));
-        form.add(borrowingDateField);
-
-        form.add(new JLabel("Due Date (YYYY-MM-DD):"));
-        form.add(dueDateField);
-
-        main.add(form, BorderLayout.CENTER);
-
-        JPanel buttons = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT)
-        );
-        buttons.setBackground(LIGHT_BG);
-
-        JButton refreshButton = new JButton("Refresh");
-        JButton borrowButton = new JButton("Confirm Borrowing");
-        JButton cancelButton = new JButton("Cancel");
-
-        borrowButton.setBackground(NAVY);
-        borrowButton.setForeground(Color.WHITE);
-
-        buttons.add(refreshButton);
-        buttons.add(cancelButton);
-        buttons.add(borrowButton);
-
-        main.add(buttons, BorderLayout.SOUTH);
-
-        add(main);
-
-        refreshButton.addActionListener(e -> loadData());
-
-        cancelButton.addActionListener(e -> dispose());
-
-        borrowButton.addActionListener(e -> processBorrowing());
+        buildHeader();
+        buildMainContent();
+        buildBottomPanel();
 
         loadData();
     }
 
+    private void buildHeader() {
+
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(BURGUNDY);
+        header.setBorder(
+                BorderFactory.createEmptyBorder(24, 30, 24, 30)
+        );
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
+        titlePanel.setLayout(
+                new BoxLayout(titlePanel, BoxLayout.Y_AXIS)
+        );
+
+        JLabel title = new JLabel("Borrow Book");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(WHITE);
+
+        JLabel subtitle = new JLabel(
+                "Process a book borrowing transaction for a library member"
+        );
+        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitle.setForeground(new Color(235, 220, 215));
+
+        titlePanel.add(title);
+        titlePanel.add(Box.createVerticalStrut(5));
+        titlePanel.add(subtitle);
+
+        JButton closeButton = new JButton("CLOSE");
+        styleButton(closeButton, WHITE, BURGUNDY);
+        closeButton.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(GOLD, 1),
+                        BorderFactory.createEmptyBorder(9, 17, 9, 17)
+                )
+        );
+        closeButton.addActionListener(e -> dispose());
+
+        header.add(titlePanel, BorderLayout.WEST);
+        header.add(closeButton, BorderLayout.EAST);
+
+        add(header, BorderLayout.NORTH);
+    }
+
+    private void buildMainContent() {
+
+        JPanel main = new JPanel(new BorderLayout(0, 22));
+        main.setBackground(CREAM);
+        main.setBorder(
+                BorderFactory.createEmptyBorder(24, 35, 18, 35)
+        );
+
+        // Summary cards
+        JPanel summaryPanel = new JPanel(
+                new GridLayout(1, 2, 18, 0)
+        );
+        summaryPanel.setOpaque(false);
+
+        memberCountLabel = createSummaryValue();
+        bookCountLabel = createSummaryValue();
+
+        summaryPanel.add(createSummaryCard(
+                "ACTIVE MEMBERS",
+                memberCountLabel,
+                "Members eligible to borrow"
+        ));
+
+        summaryPanel.add(createSummaryCard(
+                "AVAILABLE BOOKS",
+                bookCountLabel,
+                "Books currently available"
+        ));
+
+        // Borrowing information panel
+        JPanel formPanel = new JPanel(new BorderLayout(0, 22));
+        formPanel.setBackground(WHITE);
+        formPanel.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(230, 220, 210)
+                        ),
+                        BorderFactory.createEmptyBorder(28, 35, 28, 35)
+                )
+        );
+
+        // Form heading
+        JPanel formHeader = new JPanel();
+        formHeader.setOpaque(false);
+        formHeader.setLayout(
+                new BoxLayout(formHeader, BoxLayout.Y_AXIS)
+        );
+
+        JLabel formTitle = new JLabel("BORROWING INFORMATION");
+        formTitle.setFont(new Font("Segoe UI", Font.BOLD, 19));
+        formTitle.setForeground(BURGUNDY);
+        formTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel formSubtitle = new JLabel(
+                "Complete the information below to process a borrowing transaction."
+        );
+        formSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        formSubtitle.setForeground(MUTED);
+        formSubtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        formHeader.add(formTitle);
+        formHeader.add(Box.createVerticalStrut(7));
+        formHeader.add(formSubtitle);
+
+        // Form fields
+        configureComboBox(memberBox);
+        configureComboBox(bookBox);
+        configureDateField(borrowingDateField);
+        configureDateField(dueDateField);
+
+        JPanel fields = new JPanel();
+        fields.setOpaque(false);
+        fields.setLayout(
+                new BoxLayout(fields, BoxLayout.Y_AXIS)
+        );
+
+        fields.add(createFieldLabel("SELECT MEMBER"));
+        fields.add(Box.createVerticalStrut(7));
+        fields.add(memberBox);
+        fields.add(Box.createVerticalStrut(17));
+
+        fields.add(createFieldLabel("SELECT AVAILABLE BOOK"));
+        fields.add(Box.createVerticalStrut(7));
+        fields.add(bookBox);
+        fields.add(Box.createVerticalStrut(17));
+
+        fields.add(createFieldLabel("BORROWING DATE (YYYY-MM-DD)"));
+        fields.add(Box.createVerticalStrut(7));
+        fields.add(borrowingDateField);
+        fields.add(Box.createVerticalStrut(17));
+
+        fields.add(createFieldLabel("DUE DATE (YYYY-MM-DD)"));
+        fields.add(Box.createVerticalStrut(7));
+        fields.add(dueDateField);
+        fields.add(Box.createVerticalStrut(15));
+
+        JLabel note = new JLabel(
+                "<html><b>Note:</b> The due date must be later than the borrowing date.</html>"
+        );
+        note.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        note.setForeground(MUTED);
+        note.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel formCenter = new JPanel();
+        formCenter.setOpaque(false);
+        formCenter.setLayout(
+                new BoxLayout(formCenter, BoxLayout.Y_AXIS)
+        );
+
+        formCenter.add(fields);
+        formCenter.add(note);
+
+        formPanel.add(formHeader, BorderLayout.NORTH);
+        formPanel.add(formCenter, BorderLayout.CENTER);
+
+        main.add(summaryPanel, BorderLayout.NORTH);
+        main.add(formPanel, BorderLayout.CENTER);
+
+        add(main, BorderLayout.CENTER);
+    }
+
+    private void buildBottomPanel() {
+
+        JPanel bottom = new JPanel(
+                new FlowLayout(FlowLayout.RIGHT, 10, 15)
+        );
+        bottom.setBackground(CREAM);
+        bottom.setBorder(
+                BorderFactory.createEmptyBorder(0, 25, 10, 25)
+        );
+
+        JButton refreshButton = createButton(
+                "REFRESH",
+                new Color(115, 105, 100),
+                WHITE
+        );
+
+        JButton cancelButton = createButton(
+                "CANCEL",
+                new Color(225, 220, 215),
+                TEXT
+        );
+
+        JButton borrowButton = createButton(
+                "CONFIRM BORROWING",
+                BURGUNDY,
+                WHITE
+        );
+
+        refreshButton.addActionListener(e -> loadData());
+        cancelButton.addActionListener(e -> dispose());
+        borrowButton.addActionListener(e -> processBorrowing());
+
+        bottom.add(refreshButton);
+        bottom.add(cancelButton);
+        bottom.add(borrowButton);
+
+        add(bottom, BorderLayout.SOUTH);
+    }
+
+    private JLabel createSummaryValue() {
+
+        JLabel label = new JLabel("0");
+        label.setFont(new Font("Segoe UI", Font.BOLD, 27));
+        label.setForeground(BURGUNDY);
+
+        return label;
+    }
+
+    private JPanel createSummaryCard(
+            String heading,
+            JLabel value,
+            String description
+    ) {
+
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(WHITE);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(230, 220, 210)
+                        ),
+                        BorderFactory.createEmptyBorder(14, 18, 14, 18)
+                )
+        );
+
+        JLabel headingLabel = new JLabel(heading);
+        headingLabel.setFont(
+                new Font("Segoe UI", Font.BOLD, 11)
+        );
+        headingLabel.setForeground(MUTED);
+
+        JLabel descriptionLabel = new JLabel(description);
+        descriptionLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 11)
+        );
+        descriptionLabel.setForeground(MUTED);
+
+        card.add(headingLabel);
+        card.add(Box.createVerticalStrut(6));
+        card.add(value);
+        card.add(Box.createVerticalStrut(3));
+        card.add(descriptionLabel);
+
+        return card;
+    }
+
+    private JLabel createFieldLabel(String text) {
+
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setForeground(BURGUNDY);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        return label;
+    }
+
+    private void configureComboBox(JComboBox<?> comboBox) {
+
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        comboBox.setBackground(WHITE);
+        comboBox.setForeground(TEXT);
+        comboBox.setPreferredSize(new Dimension(500, 44));
+        comboBox.setMinimumSize(new Dimension(200, 44));
+        comboBox.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, 44)
+        );
+        comboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    }
+
+    private void configureDateField(JTextField field) {
+
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        field.setForeground(TEXT);
+        field.setBackground(WHITE);
+        field.setPreferredSize(new Dimension(500, 44));
+        field.setMinimumSize(new Dimension(200, 44));
+        field.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, 44)
+        );
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        field.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(220, 210, 200)
+                        ),
+                        BorderFactory.createEmptyBorder(9, 12, 9, 12)
+                )
+        );
+    }
+
+    private JButton createButton(
+            String text,
+            Color background,
+            Color foreground
+    ) {
+
+        JButton button = new JButton(text);
+        styleButton(button, background, foreground);
+
+        return button;
+    }
+
+    private void styleButton(
+            JButton button,
+            Color background,
+            Color foreground
+    ) {
+
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
+        button.setBorder(
+                BorderFactory.createEmptyBorder(11, 17, 11, 17)
+        );
+    }
+
     private void loadData() {
+
         loadMembers();
         loadBooks();
+
+        memberCountLabel.setText(
+                String.valueOf(memberBox.getItemCount())
+        );
+
+        bookCountLabel.setText(
+                String.valueOf(bookBox.getItemCount())
+        );
     }
 
     private void loadMembers() {
+
         memberBox.removeAllItems();
 
         String sql = """
@@ -132,6 +423,7 @@ public class BorrowBooksFrame extends JFrame {
              ResultSet result = statement.executeQuery()) {
 
             while (result.next()) {
+
                 memberBox.addItem(new MemberItem(
                         result.getInt("member_id"),
                         result.getString("full_name"),
@@ -145,6 +437,7 @@ public class BorrowBooksFrame extends JFrame {
     }
 
     private void loadBooks() {
+
         bookBox.removeAllItems();
 
         String sql = """
@@ -161,6 +454,7 @@ public class BorrowBooksFrame extends JFrame {
              ResultSet result = statement.executeQuery()) {
 
             while (result.next()) {
+
                 bookBox.addItem(new BookItem(
                         result.getInt("book_id"),
                         result.getString("title"),
@@ -175,6 +469,7 @@ public class BorrowBooksFrame extends JFrame {
     }
 
     private void processBorrowing() {
+
         MemberItem member =
                 (MemberItem) memberBox.getSelectedItem();
 
@@ -182,62 +477,77 @@ public class BorrowBooksFrame extends JFrame {
                 (BookItem) bookBox.getSelectedItem();
 
         if (member == null) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Please register or select an active member first.",
                     "No Member Available",
                     JOptionPane.WARNING_MESSAGE
             );
+
             return;
         }
 
         if (book == null) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "There are no available books to borrow.",
                     "No Book Available",
                     JOptionPane.WARNING_MESSAGE
             );
+
             return;
         }
 
         try {
-            LocalDate borrowingDate =
-                    LocalDate.parse(borrowingDateField.getText().trim());
 
-            LocalDate dueDate =
-                    LocalDate.parse(dueDateField.getText().trim());
+            LocalDate borrowingDate = LocalDate.parse(
+                    borrowingDateField.getText().trim()
+            );
+
+            LocalDate dueDate = LocalDate.parse(
+                    dueDateField.getText().trim()
+            );
 
             if (borrowingDate.isAfter(LocalDate.now())) {
+
                 JOptionPane.showMessageDialog(
                         this,
                         "Borrowing date cannot be in the future.",
                         "Invalid Date",
                         JOptionPane.WARNING_MESSAGE
                 );
+
                 return;
             }
 
-            if (dueDate.isBefore(borrowingDate)
-                    || dueDate.isEqual(borrowingDate)) {
+            if (!dueDate.isAfter(borrowingDate)) {
+
                 JOptionPane.showMessageDialog(
                         this,
                         "Due date must be after the borrowing date.",
                         "Invalid Due Date",
                         JOptionPane.WARNING_MESSAGE
                 );
+
                 return;
             }
 
             int confirmation = JOptionPane.showConfirmDialog(
                     this,
-                    "Member: " + member.name
+                    "Please review the borrowing information:\n\n"
+                            + "Member: " + member.name
+                            + "\nStudent ID: " + member.studentId
                             + "\nBook: " + book.title
+                            + "\nAuthor: " + book.author
+                            + "\nAvailable Copies: " + book.availableCopies
                             + "\nBorrowing Date: " + borrowingDate
                             + "\nDue Date: " + dueDate
                             + "\n\nConfirm this transaction?",
                     "Confirm Borrowing",
-                    JOptionPane.YES_NO_OPTION
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
             );
 
             if (confirmation != JOptionPane.YES_OPTION) {
@@ -252,21 +562,23 @@ public class BorrowBooksFrame extends JFrame {
             );
 
             if (success) {
+
                 JOptionPane.showMessageDialog(
                         this,
                         "Book borrowed successfully!",
-                        "Success",
+                        "Borrowing Successful",
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
                 loadBooks();
 
                 dueDateField.setText(
-                        LocalDate.now().plusDays(7).toString()
+                        borrowingDate.plusDays(7).toString()
                 );
             }
 
-        } catch (java.time.format.DateTimeParseException e) {
+        } catch (DateTimeParseException e) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Please enter valid dates using YYYY-MM-DD.",
@@ -275,26 +587,32 @@ public class BorrowBooksFrame extends JFrame {
             );
 
         } catch (SQLException | IllegalArgumentException e) {
+
             JOptionPane.showMessageDialog(
                     this,
                     e.getMessage(),
                     "Borrowing Failed",
                     JOptionPane.WARNING_MESSAGE
             );
+
+            e.printStackTrace();
         }
     }
 
     private void showError(SQLException e) {
+
         JOptionPane.showMessageDialog(
                 this,
                 "Database error: " + e.getMessage(),
-                "Error",
+                "Database Error",
                 JOptionPane.ERROR_MESSAGE
         );
+
         e.printStackTrace();
     }
 
     private static class MemberItem {
+
         private final int id;
         private final String name;
         private final String studentId;
@@ -312,12 +630,18 @@ public class BorrowBooksFrame extends JFrame {
     }
 
     private static class BookItem {
+
         private final int id;
         private final String title;
         private final String author;
         private final int availableCopies;
 
-        BookItem(int id, String title, String author, int availableCopies) {
+        BookItem(
+                int id,
+                String title,
+                String author,
+                int availableCopies
+        ) {
             this.id = id;
             this.title = title;
             this.author = author;
