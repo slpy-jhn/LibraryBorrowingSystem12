@@ -2,6 +2,7 @@
 package com.library.database;
 
 import java.sql.Connection;
+import java.io.File;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +15,13 @@ public class DatabaseConnection {
 
     // Connect to SQLite database
     public static Connection getConnection() throws SQLException {
+
+        File databaseFile = new File("library.db");
+
+        System.out.println(
+                "DATABASE LOCATION: "
+                        + databaseFile.getAbsolutePath()
+        );
 
         Connection connection = DriverManager.getConnection(URL);
 

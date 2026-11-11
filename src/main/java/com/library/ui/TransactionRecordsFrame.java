@@ -4,18 +4,32 @@ package com.library.ui;
 import com.library.database.DatabaseConnection;
 
 import javax.swing.*;
+import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
+
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 public class TransactionRecordsFrame extends JFrame {
+
+    // =====================================================
+    // COMPONENTS
+    // =====================================================
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -27,12 +41,18 @@ public class TransactionRecordsFrame extends JFrame {
     private JLabel borrowedValue;
     private JLabel overdueValue;
     private JLabel returnedValue;
+    private JLabel recordCountLabel;
+
+    // =====================================================
+    // THEME
+    // =====================================================
 
     private static final Color BURGUNDY = new Color(75, 20, 36);
     private static final Color DARK_BURGUNDY = new Color(55, 13, 27);
     private static final Color GOLD = new Color(176, 141, 87);
     private static final Color CREAM = new Color(243, 235, 221);
     private static final Color WHITE = new Color(255, 252, 245);
+
     private static final Color TEXT = new Color(53, 37, 31);
     private static final Color MUTED = new Color(130, 115, 103);
     private static final Color BORDER = new Color(222, 210, 191);
@@ -42,9 +62,13 @@ public class TransactionRecordsFrame extends JFrame {
     private static final Color RED = new Color(175, 55, 55);
     private static final Color BLUE = new Color(60, 105, 155);
 
+    // =====================================================
+    // CONSTRUCTOR
+    // =====================================================
+
     public TransactionRecordsFrame() {
 
-        setTitle("Transaction Records");
+        setTitle("LibraryLink - Transaction Records");
         setSize(1350, 760);
         setMinimumSize(new Dimension(1000, 600));
         setLocationRelativeTo(null);
@@ -55,68 +79,120 @@ public class TransactionRecordsFrame extends JFrame {
 
         buildHeader();
         buildMainContent();
-        buildBottomPanel();
 
         loadTransactions("", "ALL");
     }
 
+    // =====================================================
+    // HEADER
+    // =====================================================
+
     private void buildHeader() {
 
         JPanel header = new JPanel(new BorderLayout());
+
         header.setBackground(BURGUNDY);
         header.setBorder(
-                BorderFactory.createEmptyBorder(22, 28, 22, 28)
+                new EmptyBorder(22, 28, 22, 28)
         );
 
         JPanel titlePanel = new JPanel();
+
         titlePanel.setOpaque(false);
         titlePanel.setLayout(
                 new BoxLayout(titlePanel, BoxLayout.Y_AXIS)
         );
 
         JLabel title = new JLabel("Transaction Records");
-        title.setFont(new Font("Georgia", Font.BOLD, 27));
+
+        title.setFont(
+                new Font("Georgia", Font.BOLD, 27)
+        );
+
         title.setForeground(GOLD);
 
         JLabel subtitle = new JLabel(
                 "View and monitor the complete borrowing and return history"
         );
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        subtitle.setForeground(new Color(235, 220, 215));
+
+        subtitle.setFont(
+                new Font("Segoe UI", Font.PLAIN, 12)
+        );
+
+        subtitle.setForeground(
+                new Color(235, 220, 215)
+        );
 
         titlePanel.add(title);
         titlePanel.add(Box.createVerticalStrut(5));
         titlePanel.add(subtitle);
 
-        JButton closeButton = new JButton("CLOSE");
-        styleButton(closeButton, BURGUNDY, WHITE);
+        // TRANSPARENT ICON-ONLY BACK BUTTON
 
-        closeButton.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(GOLD, 1),
-                        new EmptyBorder(9, 18, 9, 18)
-                )
+        JButton backButton = new JButton("\u2190");
+
+        backButton.setFont(
+                new Font("Segoe UI Symbol", Font.PLAIN, 27)
         );
 
-        closeButton.addActionListener(e -> dispose());
+        backButton.setForeground(GOLD);
+        backButton.setBackground(new Color(0, 0, 0, 0));
+
+        backButton.setPreferredSize(
+                new Dimension(46, 46)
+        );
+
+        backButton.setBorderPainted(false);
+        backButton.setContentAreaFilled(false);
+        backButton.setFocusPainted(false);
+        backButton.setOpaque(false);
+
+        backButton.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
+
+        backButton.setToolTipText("Back");
+
+        backButton.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                backButton.setForeground(WHITE);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                backButton.setForeground(GOLD);
+            }
+        });
+
+        backButton.addActionListener(e -> dispose());
 
         header.add(titlePanel, BorderLayout.WEST);
-        header.add(closeButton, BorderLayout.EAST);
+        header.add(backButton, BorderLayout.EAST);
 
         add(header, BorderLayout.NORTH);
     }
 
+    // =====================================================
+    // MAIN CONTENT
+    // =====================================================
+
     private void buildMainContent() {
 
-        JPanel main = new JPanel(new BorderLayout(0, 18));
+        JPanel main = new JPanel(new BorderLayout(0, 20));
+
         main.setBackground(CREAM);
         main.setBorder(
-                BorderFactory.createEmptyBorder(20, 25, 10, 25)
+                new EmptyBorder(22, 25, 22, 25)
         );
 
+        // SUMMARY CARDS
+
         JPanel summaryPanel = new JPanel(
-                new GridLayout(1, 4, 12, 0)
+                new GridLayout(1, 4, 15, 0)
         );
+
         summaryPanel.setOpaque(false);
 
         totalValue = createSummaryValue(BURGUNDY);
@@ -124,89 +200,197 @@ public class TransactionRecordsFrame extends JFrame {
         overdueValue = createSummaryValue(RED);
         returnedValue = createSummaryValue(GREEN);
 
-        summaryPanel.add(createSummaryCard(
-                "TOTAL TRANSACTIONS",
-                totalValue,
-                "All recorded transactions"
-        ));
+        summaryPanel.add(
+                createSummaryCard(
+                        "TOTAL TRANSACTIONS",
+                        totalValue,
+                        "All recorded transactions",
+                        "01"
+                )
+        );
 
-        summaryPanel.add(createSummaryCard(
-                "BORROWED",
-                borrowedValue,
-                "Currently active loans"
-        ));
+        summaryPanel.add(
+                createSummaryCard(
+                        "BORROWED",
+                        borrowedValue,
+                        "Currently active loans",
+                        "02"
+                )
+        );
 
-        summaryPanel.add(createSummaryCard(
-                "OVERDUE",
-                overdueValue,
-                "Past their due dates"
-        ));
+        summaryPanel.add(
+                createSummaryCard(
+                        "OVERDUE",
+                        overdueValue,
+                        "Past their due dates",
+                        "03"
+                )
+        );
 
-        summaryPanel.add(createSummaryCard(
-                "RETURNED",
-                returnedValue,
-                "Completed returns"
-        ));
+        summaryPanel.add(
+                createSummaryCard(
+                        "RETURNED",
+                        returnedValue,
+                        "Completed returns",
+                        "04"
+                )
+        );
 
-        JPanel centerPanel = new JPanel(new BorderLayout(0, 12));
+        // CENTER PANEL
+
+        JPanel centerPanel = new JPanel(
+                new BorderLayout(0, 15)
+        );
+
         centerPanel.setOpaque(false);
 
-        JPanel toolbar = new JPanel(new BorderLayout(10, 0));
+        // TOOLBAR
+
+        JPanel toolbar = new JPanel(
+                new BorderLayout(12, 0)
+        );
+
         toolbar.setOpaque(false);
 
-        JLabel sectionTitle = new JLabel("Transaction History");
-        sectionTitle.setFont(new Font("Georgia", Font.BOLD, 17));
+        JPanel headingPanel = new JPanel(
+                new BorderLayout(0, 4)
+        );
+
+        headingPanel.setOpaque(false);
+
+        JLabel sectionTitle = new JLabel(
+                "Transaction History"
+        );
+
+        sectionTitle.setFont(
+                new Font("Georgia", Font.BOLD, 18)
+        );
+
         sectionTitle.setForeground(BURGUNDY);
 
-        JPanel filterPanel = new JPanel(new FlowLayout(
-                FlowLayout.RIGHT, 8, 0
-        ));
-        filterPanel.setOpaque(false);
+        recordCountLabel = new JLabel(
+                "Showing 0 records"
+        );
 
-        JLabel searchLabel = new JLabel("Search:");
-        searchLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        searchLabel.setForeground(TEXT);
+        recordCountLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 11)
+        );
 
-        searchField = new JTextField(18);
-        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        searchField.setPreferredSize(new Dimension(190, 36));
-        searchField.setBackground(WHITE);
+        recordCountLabel.setForeground(MUTED);
+
+        headingPanel.add(
+                sectionTitle,
+                BorderLayout.NORTH
+        );
+
+        headingPanel.add(
+                recordCountLabel,
+                BorderLayout.SOUTH
+        );
+
+        // SEARCH AND FILTER PANEL
+
+        RoundedPanel filterPanel = new RoundedPanel(
+                18,
+                WHITE,
+                BORDER
+        );
+
+        filterPanel.setLayout(
+                new FlowLayout(
+                        FlowLayout.RIGHT,
+                        12,
+                        9
+                )
+        );
+
+        filterPanel.setBorder(
+                new EmptyBorder(3, 10, 3, 10)
+        );
+
+        JLabel searchIcon = new JLabel("\u2315");
+
+        searchIcon.setFont(
+                new Font("Segoe UI Symbol", Font.BOLD, 22)
+        );
+
+        searchIcon.setForeground(GOLD);
+
+        searchField = new JTextField(17);
+
+        searchField.setFont(
+                new Font("Segoe UI", Font.PLAIN, 12)
+        );
+
+        searchField.setPreferredSize(
+                new Dimension(190, 34)
+        );
+
         searchField.setForeground(TEXT);
+        searchField.setBackground(WHITE);
         searchField.setCaretColor(BURGUNDY);
+
         searchField.setToolTipText(
                 "Search member, Student/Employee ID, or book title"
         );
 
         searchField.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(BORDER),
-                        new EmptyBorder(7, 10, 7, 10)
+                BorderFactory.createEmptyBorder(
+                        5, 5, 5, 5
                 )
         );
 
-        JLabel statusLabel = new JLabel("Status:");
-        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        statusLabel.setForeground(TEXT);
+        JLabel divider = new JLabel("|");
 
-        statusFilter = new JComboBox<>(new String[]{
-                "ALL",
-                "BORROWED",
-                "OVERDUE",
-                "RETURNED"
-        });
+        divider.setForeground(BORDER);
 
-        statusFilter.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        statusFilter.setPreferredSize(new Dimension(125, 36));
+        divider.setFont(
+                new Font("Segoe UI", Font.PLAIN, 20)
+        );
+
+        // STATUS LABEL REMOVED
+
+        statusFilter = new JComboBox<>(
+                new String[]{
+                        "ALL",
+                        "BORROWED",
+                        "OVERDUE",
+                        "RETURNED"
+                }
+        );
+
+        statusFilter.setFont(
+                new Font("Segoe UI", Font.BOLD, 11)
+        );
+
+        statusFilter.setPreferredSize(
+                new Dimension(125, 34)
+        );
+
         statusFilter.setBackground(WHITE);
         statusFilter.setForeground(BURGUNDY);
+        statusFilter.setFocusable(false);
 
-        filterPanel.add(searchLabel);
+        statusFilter.setBorder(
+                BorderFactory.createLineBorder(BORDER)
+        );
+
+        filterPanel.add(searchIcon);
         filterPanel.add(searchField);
-        filterPanel.add(statusLabel);
+        filterPanel.add(divider);
         filterPanel.add(statusFilter);
 
-        toolbar.add(sectionTitle, BorderLayout.WEST);
-        toolbar.add(filterPanel, BorderLayout.EAST);
+        toolbar.add(
+                headingPanel,
+                BorderLayout.WEST
+        );
+
+        toolbar.add(
+                filterPanel,
+                BorderLayout.EAST
+        );
+
+        // TABLE MODEL
 
         String[] columns = {
                 "Transaction ID",
@@ -228,6 +412,7 @@ public class TransactionRecordsFrame extends JFrame {
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
+
                 return columnIndex == 0
                         ? Integer.class
                         : String.class;
@@ -237,47 +422,103 @@ public class TransactionRecordsFrame extends JFrame {
         table = new JTable(tableModel);
 
         sorter = new TableRowSorter<>(tableModel);
+
         table.setRowSorter(sorter);
 
         styleTable();
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(WHITE);
+        // SCROLL PANE - NO HORIZONTAL SCROLLBAR
 
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBackground(WHITE);
-        tablePanel.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(BORDER),
-                        new EmptyBorder(8, 8, 8, 8)
-                )
+        JScrollPane scrollPane = new JScrollPane(
+                table,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         );
 
-        tablePanel.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setBorder(
+                BorderFactory.createEmptyBorder()
+        );
 
-        centerPanel.add(toolbar, BorderLayout.NORTH);
-        centerPanel.add(tablePanel, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground(WHITE);
 
-        main.add(summaryPanel, BorderLayout.NORTH);
-        main.add(centerPanel, BorderLayout.CENTER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        scrollPane.getVerticalScrollBar().setPreferredSize(
+                new Dimension(10, 0)
+        );
+
+        // ROUNDED TABLE PANEL
+
+        RoundedPanel tablePanel = new RoundedPanel(
+                20,
+                WHITE,
+                BORDER
+        );
+
+        tablePanel.setLayout(new BorderLayout());
+
+        tablePanel.setBorder(
+                new EmptyBorder(9, 9, 9, 9)
+        );
+
+        tablePanel.add(
+                scrollPane,
+                BorderLayout.CENTER
+        );
+
+        centerPanel.add(
+                toolbar,
+                BorderLayout.NORTH
+        );
+
+        centerPanel.add(
+                tablePanel,
+                BorderLayout.CENTER
+        );
+
+        main.add(
+                summaryPanel,
+                BorderLayout.NORTH
+        );
+
+        main.add(
+                centerPanel,
+                BorderLayout.CENTER
+        );
 
         add(main, BorderLayout.CENTER);
 
+        // AUTOMATIC COLUMN RESIZING
+
+        tablePanel.addComponentListener(new ComponentAdapter() {
+
+            @Override
+            public void componentResized(ComponentEvent e) {
+                fitTableColumns();
+            }
+        });
+
+        // SEARCH LISTENER
+
         searchField.getDocument().addDocumentListener(
-                new javax.swing.event.DocumentListener() {
+                new DocumentListener() {
 
                     private void filter() {
 
-                        String text = searchField.getText().trim();
+                        String text = searchField
+                                .getText()
+                                .trim();
 
                         if (text.isEmpty()) {
+
                             sorter.setRowFilter(null);
+
                         } else {
+
                             sorter.setRowFilter(
                                     RowFilter.regexFilter(
                                             "(?i)" +
-                                                    java.util.regex.Pattern.quote(text)
+                                                    Pattern.quote(text)
                                     )
                             );
                         }
@@ -286,184 +527,272 @@ public class TransactionRecordsFrame extends JFrame {
                     }
 
                     @Override
-                    public void insertUpdate(
-                            javax.swing.event.DocumentEvent e
-                    ) {
+                    public void insertUpdate(DocumentEvent e) {
                         filter();
                     }
 
                     @Override
-                    public void removeUpdate(
-                            javax.swing.event.DocumentEvent e
-                    ) {
+                    public void removeUpdate(DocumentEvent e) {
                         filter();
                     }
 
                     @Override
-                    public void changedUpdate(
-                            javax.swing.event.DocumentEvent e
-                    ) {
+                    public void changedUpdate(DocumentEvent e) {
                         filter();
                     }
                 }
         );
 
-        statusFilter.addActionListener(e ->
-                loadTransactions(
-                        searchField.getText().trim(),
-                        statusFilter.getSelectedItem().toString()
-                )
-        );
-    }
+        // STATUS FILTER
 
-    private void buildBottomPanel() {
+        statusFilter.addActionListener(e -> {
 
-        JPanel bottom = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT, 10, 12)
-        );
-
-        bottom.setBackground(CREAM);
-        bottom.setBorder(
-                BorderFactory.createEmptyBorder(5, 25, 12, 25)
-        );
-
-        JButton detailsButton = createButton(
-                "VIEW DETAILS",
-                WHITE,
-                BURGUNDY
-        );
-
-        JButton refreshButton = createButton(
-                "REFRESH",
-                BURGUNDY,
-                WHITE
-        );
-
-        detailsButton.addActionListener(e -> viewSelectedDetails());
-
-        refreshButton.addActionListener(e -> {
-            searchField.setText("");
-            statusFilter.setSelectedItem("ALL");
-            loadTransactions("", "ALL");
+            loadTransactions(
+                    searchField.getText().trim(),
+                    statusFilter.getSelectedItem().toString()
+            );
         });
 
-        bottom.add(detailsButton);
-        bottom.add(refreshButton);
+        // CLICK TABLE ROW TO VIEW DETAILS
 
-        add(bottom, BorderLayout.SOUTH);
+        table.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+                int clickedRow = table.rowAtPoint(e.getPoint());
+
+                if (clickedRow < 0) {
+                    return;
+                }
+
+                table.setRowSelectionInterval(
+                        clickedRow,
+                        clickedRow
+                );
+
+                if (e.getClickCount() == 1) {
+                    viewSelectedDetails();
+                }
+            }
+        });
     }
+
+    // =====================================================
+    // FIT TABLE COLUMNS
+    // =====================================================
+
+    private void fitTableColumns() {
+
+        if (table == null || table.getColumnCount() == 0) {
+            return;
+        }
+
+        int availableWidth = table.getParent().getWidth();
+
+        if (availableWidth <= 0) {
+            return;
+        }
+
+        int[] preferredWidths = {
+                105, 165, 150, 205, 125, 125, 125, 105
+        };
+
+        int totalPreferred = 0;
+
+        for (int width : preferredWidths) {
+            totalPreferred += width;
+        }
+
+        int remainingWidth = availableWidth;
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+
+            int columnWidth;
+
+            if (i == table.getColumnCount() - 1) {
+
+                columnWidth = remainingWidth;
+
+            } else {
+
+                columnWidth = (int) (
+                        (double) preferredWidths[i]
+                                / totalPreferred
+                                * availableWidth
+                );
+
+                remainingWidth -= columnWidth;
+            }
+
+            table.getColumnModel()
+                    .getColumn(i)
+                    .setPreferredWidth(columnWidth);
+
+            table.getColumnModel()
+                    .getColumn(i)
+                    .setMinWidth(65);
+        }
+
+        table.setAutoResizeMode(
+                JTable.AUTO_RESIZE_ALL_COLUMNS
+        );
+
+        table.revalidate();
+        table.repaint();
+    }
+
+    // =====================================================
+    // SUMMARY VALUE
+    // =====================================================
 
     private JLabel createSummaryValue(Color color) {
 
         JLabel label = new JLabel("0");
-        label.setFont(new Font("Georgia", Font.BOLD, 27));
+
+        label.setFont(
+                new Font("Georgia", Font.BOLD, 29)
+        );
+
         label.setForeground(color);
 
         return label;
     }
 
+    // =====================================================
+    // SUMMARY CARD
+    // =====================================================
+
     private JPanel createSummaryCard(
             String heading,
             JLabel value,
-            String description
+            String description,
+            String number
     ) {
 
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(WHITE);
+        RoundedPanel card = new RoundedPanel(
+                20,
+                WHITE,
+                BORDER
+        );
+
+        card.setLayout(new BorderLayout());
 
         card.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(BORDER),
-                        new EmptyBorder(14, 15, 14, 15)
-                )
+                new EmptyBorder(16, 17, 16, 17)
         );
 
         JPanel textPanel = new JPanel();
+
         textPanel.setOpaque(false);
+
         textPanel.setLayout(
                 new BoxLayout(textPanel, BoxLayout.Y_AXIS)
         );
 
         JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(new Font("Georgia", Font.BOLD, 11));
+
+        headingLabel.setFont(
+                new Font("Georgia", Font.BOLD, 10)
+        );
+
         headingLabel.setForeground(MUTED);
 
         JLabel descriptionLabel = new JLabel(description);
-        descriptionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+
+        descriptionLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 10)
+        );
+
         descriptionLabel.setForeground(MUTED);
 
         textPanel.add(headingLabel);
-        textPanel.add(Box.createVerticalStrut(8));
+        textPanel.add(Box.createVerticalStrut(10));
         textPanel.add(value);
         textPanel.add(Box.createVerticalStrut(4));
         textPanel.add(descriptionLabel);
 
-        JLabel watermark = new JLabel("L");
-        watermark.setFont(new Font("Georgia", Font.BOLD, 48));
-        watermark.setForeground(new Color(225, 211, 185));
+        JLabel watermark = new JLabel(number);
 
-        card.add(textPanel, BorderLayout.CENTER);
-        card.add(watermark, BorderLayout.EAST);
+        watermark.setFont(
+                new Font("Georgia", Font.BOLD, 29)
+        );
+
+        watermark.setForeground(
+                new Color(225, 211, 185)
+        );
+
+        card.add(
+                textPanel,
+                BorderLayout.CENTER
+        );
+
+        card.add(
+                watermark,
+                BorderLayout.EAST
+        );
 
         return card;
     }
 
-    private JButton createButton(
-            String text,
-            Color background,
-            Color foreground
-    ) {
-
-        JButton button = new JButton(text);
-        styleButton(button, background, foreground);
-
-        return button;
-    }
-
-    private void styleButton(
-            JButton button,
-            Color background,
-            Color foreground
-    ) {
-
-        button.setFont(new Font("Georgia", Font.BOLD, 11));
-        button.setBackground(background);
-        button.setForeground(foreground);
-        button.setFocusPainted(false);
-        button.setOpaque(true);
-        button.setCursor(
-                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        );
-
-        button.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(GOLD, 1),
-                        new EmptyBorder(9, 15, 9, 15)
-                )
-        );
-    }
+    // =====================================================
+    // TABLE DESIGN
+    // =====================================================
 
     private void styleTable() {
 
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setFont(
+                new Font("Segoe UI", Font.PLAIN, 12)
+        );
+
         table.setForeground(TEXT);
         table.setBackground(WHITE);
-        table.setRowHeight(38);
+
+        table.setRowHeight(43);
+
         table.setShowVerticalLines(false);
         table.setShowHorizontalLines(true);
-        table.setGridColor(BORDER);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        table.setGridColor(
+                new Color(235, 226, 212)
+        );
+
+        table.setSelectionMode(
+                ListSelectionModel.SINGLE_SELECTION
+        );
+
         table.setSelectionBackground(LIGHT_GOLD);
         table.setSelectionForeground(BURGUNDY);
+
         table.setFillsViewportHeight(true);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        table.setAutoResizeMode(
+                JTable.AUTO_RESIZE_ALL_COLUMNS
+        );
+
+        table.setIntercellSpacing(
+                new Dimension(0, 1)
+        );
+
+        // TABLE HEADER
 
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Georgia", Font.BOLD, 11));
+
+        header.setFont(
+                new Font("Georgia", Font.BOLD, 10)
+        );
+
         header.setBackground(BURGUNDY);
         header.setForeground(WHITE);
-        header.setPreferredSize(new Dimension(0, 42));
+
+        header.setPreferredSize(
+                new Dimension(0, 45)
+        );
+
         header.setReorderingAllowed(false);
+        header.setResizingAllowed(false);
+
+        // GENERAL CELL RENDERER
 
         DefaultTableCellRenderer renderer =
                 new DefaultTableCellRenderer() {
@@ -489,17 +818,21 @@ public class TransactionRecordsFrame extends JFrame {
                                 );
 
                         if (isSelected) {
+
                             component.setBackground(LIGHT_GOLD);
                             component.setForeground(BURGUNDY);
+
                         } else {
+
                             component.setBackground(
                                     row % 2 == 0 ? WHITE : CREAM
                             );
+
                             component.setForeground(TEXT);
                         }
 
                         setBorder(
-                                BorderFactory.createEmptyBorder(0, 8, 0, 8)
+                                new EmptyBorder(0, 7, 0, 7)
                         );
 
                         return component;
@@ -507,10 +840,13 @@ public class TransactionRecordsFrame extends JFrame {
                 };
 
         for (int i = 0; i < table.getColumnCount(); i++) {
+
             table.getColumnModel()
                     .getColumn(i)
                     .setCellRenderer(renderer);
         }
+
+        // STATUS RENDERER
 
         DefaultTableCellRenderer statusRenderer =
                 new DefaultTableCellRenderer() {
@@ -537,27 +873,41 @@ public class TransactionRecordsFrame extends JFrame {
 
                         String status = String.valueOf(value);
 
+                        setHorizontalAlignment(
+                                SwingConstants.CENTER
+                        );
+
+                        setFont(
+                                new Font("Georgia", Font.BOLD, 10)
+                        );
+
                         if (isSelected) {
+
                             component.setBackground(LIGHT_GOLD);
                             component.setForeground(BURGUNDY);
+
                         } else {
+
                             component.setBackground(
                                     row % 2 == 0 ? WHITE : CREAM
                             );
 
                             if ("RETURNED".equalsIgnoreCase(status)) {
+
                                 component.setForeground(GREEN);
+
                             } else if ("OVERDUE".equalsIgnoreCase(status)) {
+
                                 component.setForeground(RED);
+
                             } else {
+
                                 component.setForeground(BLUE);
                             }
                         }
 
-                        setHorizontalAlignment(SwingConstants.CENTER);
-                        setFont(new Font("Georgia", Font.BOLD, 10));
                         setBorder(
-                                BorderFactory.createEmptyBorder(0, 5, 0, 5)
+                                new EmptyBorder(0, 4, 0, 4)
                         );
 
                         return component;
@@ -567,18 +917,16 @@ public class TransactionRecordsFrame extends JFrame {
         table.getColumnModel()
                 .getColumn(7)
                 .setCellRenderer(statusRenderer);
-
-        table.getColumnModel().getColumn(0).setPreferredWidth(105);
-        table.getColumnModel().getColumn(1).setPreferredWidth(170);
-        table.getColumnModel().getColumn(2).setPreferredWidth(155);
-        table.getColumnModel().getColumn(3).setPreferredWidth(210);
-        table.getColumnModel().getColumn(4).setPreferredWidth(130);
-        table.getColumnModel().getColumn(5).setPreferredWidth(130);
-        table.getColumnModel().getColumn(6).setPreferredWidth(130);
-        table.getColumnModel().getColumn(7).setPreferredWidth(110);
     }
 
-    private void loadTransactions(String search, String status) {
+    // =====================================================
+    // LOAD TRANSACTIONS
+    // =====================================================
+
+    private void loadTransactions(
+            String search,
+            String status
+    ) {
 
         tableModel.setRowCount(0);
 
@@ -630,11 +978,13 @@ public class TransactionRecordsFrame extends JFrame {
                 ORDER BY t.transaction_id DESC
                 """;
 
-        try (Connection connection =
-                     DatabaseConnection.getConnection();
+        try (
+                Connection connection =
+                        DatabaseConnection.getConnection();
 
-             PreparedStatement statement =
-                     connection.prepareStatement(sql)) {
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
 
             String keyword = "%" + search + "%";
 
@@ -667,6 +1017,7 @@ public class TransactionRecordsFrame extends JFrame {
             }
 
             updateSummaryCards();
+            fitTableColumns();
 
         } catch (SQLException e) {
 
@@ -682,9 +1033,18 @@ public class TransactionRecordsFrame extends JFrame {
         }
     }
 
+    // =====================================================
+    // UPDATE SUMMARY CARDS
+    // =====================================================
+
     private void updateSummaryCards() {
 
+        if (table == null || tableModel == null) {
+            return;
+        }
+
         int total = table.getRowCount();
+
         int borrowed = 0;
         int overdue = 0;
         int returned = 0;
@@ -698,10 +1058,15 @@ public class TransactionRecordsFrame extends JFrame {
             );
 
             if ("BORROWED".equalsIgnoreCase(status)) {
+
                 borrowed++;
+
             } else if ("OVERDUE".equalsIgnoreCase(status)) {
+
                 overdue++;
+
             } else if ("RETURNED".equalsIgnoreCase(status)) {
+
                 returned++;
             }
         }
@@ -710,21 +1075,24 @@ public class TransactionRecordsFrame extends JFrame {
         borrowedValue.setText(String.valueOf(borrowed));
         overdueValue.setText(String.valueOf(overdue));
         returnedValue.setText(String.valueOf(returned));
+
+        if (recordCountLabel != null) {
+
+            recordCountLabel.setText(
+                    "Showing " + total + " records"
+            );
+        }
     }
+
+    // =====================================================
+    // VIEW DETAILS WHEN A TABLE ROW IS CLICKED
+    // =====================================================
 
     private void viewSelectedDetails() {
 
         int selectedRow = table.getSelectedRow();
 
         if (selectedRow == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a transaction record first.",
-                    "No Record Selected",
-                    JOptionPane.WARNING_MESSAGE
-            );
-
             return;
         }
 
@@ -741,36 +1109,367 @@ public class TransactionRecordsFrame extends JFrame {
                 "Status"
         };
 
-        JPanel detailsPanel = new JPanel(
-                new GridLayout(0, 2, 12, 12)
+        // DIALOG
+
+        JDialog dialog = new JDialog(
+                this,
+                "Transaction Details",
+                true
         );
 
-        detailsPanel.setBackground(WHITE);
-        detailsPanel.setBorder(
-                new EmptyBorder(15, 15, 15, 15)
+        dialog.setUndecorated(true);
+
+        dialog.setSize(600, 510);
+        dialog.setMinimumSize(new Dimension(540, 460));
+        dialog.setLocationRelativeTo(this);
+
+        JPanel root = new JPanel(new BorderLayout());
+
+        root.setBackground(WHITE);
+
+        root.setBorder(
+                BorderFactory.createLineBorder(BORDER, 1)
         );
+
+        // DIALOG HEADER
+
+        JPanel dialogHeader = new JPanel(
+                new BorderLayout()
+        );
+
+        dialogHeader.setBackground(BURGUNDY);
+
+        dialogHeader.setBorder(
+                new EmptyBorder(17, 22, 17, 18)
+        );
+
+        JPanel heading = new JPanel();
+
+        heading.setOpaque(false);
+
+        heading.setLayout(
+                new BoxLayout(heading, BoxLayout.Y_AXIS)
+        );
+
+        JLabel dialogTitle = new JLabel(
+                "Transaction Details"
+        );
+
+        dialogTitle.setFont(
+                new Font("Georgia", Font.BOLD, 20)
+        );
+
+        dialogTitle.setForeground(GOLD);
+
+        JLabel dialogSubtitle = new JLabel(
+                "Complete information about this transaction"
+        );
+
+        dialogSubtitle.setFont(
+                new Font("Segoe UI", Font.PLAIN, 11)
+        );
+
+        dialogSubtitle.setForeground(
+                new Color(235, 220, 215)
+        );
+
+        heading.add(dialogTitle);
+        heading.add(Box.createVerticalStrut(5));
+        heading.add(dialogSubtitle);
+
+        // TRANSPARENT ICON-ONLY BACK BUTTON
+
+        JButton backButton = new JButton("\u2190");
+
+        backButton.setFont(
+                new Font("Segoe UI Symbol", Font.PLAIN, 25)
+        );
+
+        backButton.setForeground(GOLD);
+        backButton.setBackground(new Color(0, 0, 0, 0));
+
+        backButton.setPreferredSize(
+                new Dimension(42, 42)
+        );
+
+        backButton.setBorderPainted(false);
+        backButton.setContentAreaFilled(false);
+        backButton.setFocusPainted(false);
+        backButton.setOpaque(false);
+
+        backButton.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
+
+        backButton.setToolTipText("Back");
+
+        backButton.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                backButton.setForeground(WHITE);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                backButton.setForeground(GOLD);
+            }
+        });
+
+        backButton.addActionListener(
+                e -> dialog.dispose()
+        );
+
+        dialogHeader.add(
+                heading,
+                BorderLayout.WEST
+        );
+
+        dialogHeader.add(
+                backButton,
+                BorderLayout.EAST
+        );
+
+        // DETAILS CONTENT
+
+        JPanel content = new JPanel(new BorderLayout());
+
+        content.setBackground(CREAM);
+
+        content.setBorder(
+                new EmptyBorder(20, 22, 20, 22)
+        );
+
+        RoundedPanel detailsPanel = new RoundedPanel(
+                18,
+                WHITE,
+                BORDER
+        );
+
+        detailsPanel.setLayout(
+                new GridLayout(8, 1, 0, 0)
+        );
+
+        detailsPanel.setBorder(
+                new EmptyBorder(12, 22, 12, 22)
+        );
+
+        // ADD EIGHT DETAIL ROWS
 
         for (int i = 0; i < labels.length; i++) {
 
-            JLabel nameLabel = new JLabel(labels[i] + ":");
-            nameLabel.setFont(new Font("Georgia", Font.BOLD, 12));
+            JPanel row = new JPanel(
+                    new BorderLayout(12, 0)
+            );
+
+            row.setOpaque(false);
+
+            row.setBorder(
+                    new EmptyBorder(5, 0, 5, 0)
+            );
+
+            JLabel nameLabel = new JLabel(
+                    labels[i]
+            );
+
+            nameLabel.setFont(
+                    new Font("Georgia", Font.BOLD, 11)
+            );
+
             nameLabel.setForeground(BURGUNDY);
 
-            JLabel valueLabel = new JLabel(
-                    String.valueOf(tableModel.getValueAt(modelRow, i))
+            String value = String.valueOf(
+                    tableModel.getValueAt(modelRow, i)
             );
-            valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+            JLabel valueLabel = new JLabel(value);
+
+            valueLabel.setFont(
+                    new Font("Segoe UI", Font.PLAIN, 12)
+            );
+
             valueLabel.setForeground(TEXT);
 
-            detailsPanel.add(nameLabel);
-            detailsPanel.add(valueLabel);
+            if (i == 7) {
+
+                valueLabel.setFont(
+                        new Font("Georgia", Font.BOLD, 11)
+                );
+
+                if ("RETURNED".equalsIgnoreCase(value)) {
+
+                    valueLabel.setForeground(GREEN);
+
+                } else if ("OVERDUE".equalsIgnoreCase(value)) {
+
+                    valueLabel.setForeground(RED);
+
+                } else {
+
+                    valueLabel.setForeground(BLUE);
+                }
+            }
+
+            row.add(nameLabel, BorderLayout.WEST);
+            row.add(valueLabel, BorderLayout.EAST);
+
+            detailsPanel.add(row);
         }
 
-        JOptionPane.showMessageDialog(
-                this,
+        // DETAILS PANEL FILLS AVAILABLE SPACE
+
+        content.add(
                 detailsPanel,
-                "Transaction Details",
-                JOptionPane.INFORMATION_MESSAGE
+                BorderLayout.CENTER
         );
+
+        root.add(
+                dialogHeader,
+                BorderLayout.NORTH
+        );
+
+        root.add(
+                content,
+                BorderLayout.CENTER
+        );
+
+        dialog.setContentPane(root);
+        dialog.setVisible(true);
+    }
+
+    // =====================================================
+    // ROUNDED PANEL
+    // =====================================================
+
+    private static class RoundedPanel extends JPanel {
+
+        private final int radius;
+        private final Color backgroundColor;
+        private final Color borderColor;
+
+        public RoundedPanel(
+                int radius,
+                Color backgroundColor,
+                Color borderColor
+        ) {
+
+            this.radius = radius;
+            this.backgroundColor = backgroundColor;
+            this.borderColor = borderColor;
+
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+
+            Graphics2D g2 = (Graphics2D) g.create();
+
+            g2.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
+            g2.setColor(backgroundColor);
+
+            g2.fill(
+                    new RoundRectangle2D.Float(
+                            0,
+                            0,
+                            getWidth() - 1,
+                            getHeight() - 1,
+                            radius,
+                            radius
+                    )
+            );
+
+            g2.setColor(borderColor);
+
+            g2.setStroke(
+                    new BasicStroke(1f)
+            );
+
+            g2.draw(
+                    new RoundRectangle2D.Float(
+                            0.5f,
+                            0.5f,
+                            getWidth() - 2,
+                            getHeight() - 2,
+                            radius,
+                            radius
+                    )
+            );
+
+            g2.dispose();
+
+            super.paintComponent(g);
+        }
+    }
+
+    // =====================================================
+    // ROUNDED BORDER
+    // =====================================================
+
+    private static class RoundedBorder extends AbstractBorder {
+
+        private final int radius;
+        private final Color color;
+
+        public RoundedBorder(
+                int radius,
+                Color color
+        ) {
+
+            this.radius = radius;
+            this.color = color;
+        }
+
+        @Override
+        public void paintBorder(
+                Component c,
+                Graphics g,
+                int x,
+                int y,
+                int width,
+                int height
+        ) {
+
+            Graphics2D g2 = (Graphics2D) g.create();
+
+            g2.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
+            g2.setColor(color);
+
+            g2.drawRoundRect(
+                    x,
+                    y,
+                    width - 1,
+                    height - 1,
+                    radius,
+                    radius
+            );
+
+            g2.dispose();
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+
+            return new Insets(5, 8, 5, 8);
+        }
+
+        @Override
+        public Insets getBorderInsets(
+                Component c,
+                Insets insets
+        ) {
+
+            insets.set(5, 8, 5, 8);
+
+            return insets;
+        }
     }
 }
